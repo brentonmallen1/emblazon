@@ -19,7 +19,7 @@ version's corpus is frozen by digest. Next: Phase 8 (packaging).
 Polish pass (29 Oct 2026, before any release): render-only fixes re-froze patch v1/v2, sigil v1 and
 eldritch v1 (the theme formerly `mark`): band marks follow each frame's real edge (no stars past a
 hexagon's peak), sky stars never straddle the inner edge, thorn-rune blood drips from the rune
-inside the plate, dark waxes stamp lighter, the idol got sockets instead of a brow line, the garden
+inside the plate, dark waxes stamp lighter, the idol got eye sockets instead of a brow line, the garden
 dome sits on its world, satellites got a bus and dish, stations twin arrays. Heraldry, insignia and
 badge are byte-identical. Once published, no released version changes again.
 

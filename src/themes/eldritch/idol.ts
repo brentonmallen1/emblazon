@@ -19,8 +19,8 @@ const WINGS = {
 const BUST = 'M68 206C70 168 94 146 120 146C146 146 170 168 172 206Z';
 
 const HEADS = {
-  dome: { shape: 'M92 128C88 96 100 72 120 70C140 72 152 96 148 128Z', ridge: 'M120 80V100', third: 90 },
-  mantle: { shape: 'M94 128C90 100 104 54 120 46C136 54 150 100 146 128Z', ridge: 'M120 60V100', third: 86 },
+  dome: { shape: 'M92 128C88 96 100 72 120 70C140 72 152 96 148 128Z', third: 90 },
+  mantle: { shape: 'M94 128C90 100 104 54 120 46C136 54 150 100 146 128Z', third: 86 },
 } as const;
 
 /** Behind the head: a spiked crown or a pair of horns (left horn; the right is mirrored). */
@@ -55,9 +55,8 @@ export function idolArt(s: Idol, ctx: ArtContext): string {
   if (s.head === 'crowned') out += `<path d="${CROWN}" fill="${stone.face}" ${line(1.8)}/>`;
   if (s.head === 'horned') out += `<g fill="${stone.face}" ${line(1.8)}><path d="${HORN}"/><path d="${HORN}" transform="${MIRROR}"/></g>`;
   out += `<path d="${head.shape}" fill="${stone.face}" ${line(2)}/>`;
-  // A ridge down the forehead, then sunken sockets the eyes glow out of. (A single brow line
-  // across the dome read as an upside-down smile.)
-  out += `<path d="${head.ridge}" fill="none" stroke="${INK}" stroke-width="2" stroke-linecap="round"/>`;
+  // Sunken sockets the eyes glow out of, and nothing else on the face: a brow line across the dome
+  // read as an upside-down smile, and a ridge down the forehead read as something worse.
   const socket = (cx: number, cy: number, rx: number, ry: number, rot: number) =>
     `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" transform="rotate(${rot} ${cx} ${cy})"/>`;
   const sockets =
