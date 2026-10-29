@@ -5,3 +5,4 @@ dist/
 site/
 .wrangler/
 .dev.vars
+docs/images/*.svg

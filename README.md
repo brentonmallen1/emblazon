@@ -1,117 +1,149 @@
-# emblazon
+<p align="center">
+  <a href="https://emblazon.mallen.us"><img src="docs/images/hero.png" alt="emblazon: an emblem for every name. Coats of arms, mission patches, crew tags, sigils, relics and badges." width="100%"></a>
+</p>
 
-Deterministic emblems from any string — like Robohash, but coats of arms and mission patches.
-The same input always gives the same emblem, along with a description:
+<p align="center">
+  <a href="https://emblazon.mallen.us"><b>Live site</b></a> ·
+  <a href="https://emblazon.mallen.us/#try">Playground</a> ·
+  <a href="https://emblazon.mallen.us/docs">API docs</a> ·
+  <a href="https://emblazon.mallen.us/picker">Picker demo</a> ·
+  <a href="docs/PLAN.md">Design notes</a>
+</p>
 
-> **alice** → *Azure, three bezants, a bordure Or.* (heraldry v1)
->
-> Themes: `heraldry` (coats of arms, v3) and `patch` (mission patches, v1).
+<p align="center">
+  <a href="https://github.com/brentonmallen1/emblazon/actions/workflows/ci.yml"><img src="https://github.com/brentonmallen1/emblazon/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+</p>
 
-Installable and app-agnostic; its themes follow jb-rpg's six (see [docs/PLAN.md §0](docs/PLAN.md)).
-No runtime dependencies. Requires Node 23.6+ (runs TypeScript directly).
+**emblazon** turns any string into an emblem, like Robohash but with coats of arms, mission
+patches and more. Send a username, an email or a UUID; get back an SVG and a one-line
+description. The same input, theme and version always give the same emblem, so you never store
+images: store the input and draw it again.
 
-## Use
+- **Six themes**, each made for one of jb-rpg's settings and drawn flat for dark screens.
+- **An HTTP API** with batches of up to ten emblems per call, or **a library** with no
+  dependencies that runs in browsers and Node alike.
+- **Frozen versions**: a released theme version never changes, tested byte for byte.
 
-```ts
-import { emblazon } from 'emblazon';
+## Themes
 
-const { svg, description, config } = emblazon('alice@example.com', { size: 64 });
+<img src="docs/images/themes.png" alt="Six emblems from each theme: heraldry, patch, insignia, sigil, eldritch and badge." width="100%">
+
+| Theme | Setting | What you get |
+|---|---|---|
+| `heraldry` | fantasy | A coat of arms with a proper blazon, e.g. *Azure, three bezants, a bordure Or.* |
+| `patch` | deep space | A mission patch: craft, world and orbit, with a mission name |
+| `insignia` | cyberpunk | A crew tag with real letters, a serial and a barcode |
+| `sigil` | horror | A rune, eye or seal in a ring of thorns or wax |
+| `eldritch` | insanity | A relic: idols, tablets and forbidden books |
+| `badge` | modern | A clean badge with an icon or initials |
+
+Every contact sheet is on the live site under **Themes**.
+
+## Use it
+
+### Over HTTP
+
+Point an `<img>` at the image route:
+
+```html
+<img src="https://emblazon.mallen.us/patch/ada.svg?v=2" width="64" height="64" alt="">
 ```
 
-`version` defaults to the latest (`2`). Pin it if your emblems must never change: every
-released version is frozen and tested byte-for-byte. `config` can be stored and re-rendered with
-`heraldry.renderArms(config)`.
-
-### A picker (e.g. a hero's symbol)
-
-```ts
-import { emblazonOptions, emblazon, ATTRIBUTION } from 'emblazon';
-
-// Six visibly different symbols, stable for this seed. Re-roll with `${seed}:${n}`.
-const options = emblazonOptions(`${sessionId}:${heroName}`, { theme: 'heraldry', count: 6 });
-
-// Store the choice as { theme, input, version }; regenerate any time:
-const { svg } = emblazon(chosen.input, { theme: chosen.theme, version: chosen.version });
-```
-
-- Runs in the browser and Node alike: no dependencies, no `node:` imports, synchronous.
-- Emblems are drawn flat by default (muted colours, thin accent line work, made for dark
-  screens). Pinned older versions keep their original look; `style: 'classic'` asks for the
-  bright, shaded heraldry explicitly.
-- `backdrop: 'dark'` adds a light rim so the edge reads on near-black screens; `rim` takes a
-  theme accent colour.
-- Show `ATTRIBUTION` somewhere (about or rules screen); each emblem also lists its own `credits`.
-- TypeScript apps with bundler resolution (Vite) can import `src/` directly (`exports` points
-  there); `npm run build` writes plain ES modules to `dist/` for everything else.
-- Try it at `/picker` on the preview server: the same page imports the library in the browser.
-
-## As a service
-
-The preview server doubles as an HTTP API, so an app can call it instead of depending on the
-package. Full reference at `/docs` on the running server; OpenAPI 3.1 at `/api/v1/openapi.json`.
+Or ask for a batch and let the player choose. One call returns up to ten emblems:
 
 ```ts
 const params = new URLSearchParams({ input: `${sessionId}:${heroName}`, theme: 'patch', count: '10', svg: '0' });
-const { emblems } = await (await fetch(`${EMBLAZON}/api/v1/emblems?${params}`)).json();
-// Show emblems[i].url; store the chosen { theme, input, version }.
+const { emblems } = await (await fetch(`https://emblazon.mallen.us/api/v1/emblems?${params}`)).json();
+
+// Show emblems[i].url and emblems[i].description. Store the choice as { theme, input, version }.
 ```
 
-- `GET /api/v1/emblems?input=&theme=&count=1..10&v=&size=&backdrop=dark&rim=&svg=0`: one to ten
-  emblems. The first is the plain emblem for the input; the rest are fixed variants (`input#1`, …).
-  There is no seed parameter: as with Robohash, the input is the seed.
-- `GET /{theme}/{input}.svg?v=` for `<img>` tags, `.json` for metadata, `GET /api/v1/themes`.
-- CORS is open, and version-pinned responses are cacheable forever.
-- Per-client rate limits (token bucket, `RateLimit-*` headers, 429 with `Retry-After`), strict
-  security headers, inert SVGs, request timeouts and size limits.
+<img src="docs/images/variants.png" alt="Ten different mission patches returned for one input." width="100%">
 
-| Setting | Default | What it does |
-|---|---|---|
-| `PUBLIC_URL` | from the `Host` header | Base URL for links in responses and docs. Set it in production. |
-| `TRUST_PROXY` | off | Behind a proxy or CDN, take client IPs and host from its forwarding headers. Without it, every client behind the proxy shares one limit. |
-| `RATE_LIMIT_PER_MINUTE` | `120` | Sustained requests per client per minute; `0` turns limiting off. |
-| `RATE_LIMIT_BURST` | `60` | Requests a client may make at once. |
-
-
-## Deploy
-
-Production runs on Cloudflare Workers at https://emblazon.mallen.us ([wrangler.toml](wrangler.toml)).
-Pages and the picker's modules are prerendered into `site/` and served as static assets; the
-Worker ([worker.ts](worker.ts)) answers the API and emblem images through the same handler the
-Node server uses. Rate limiting there is Cloudflare's own binding, 120 requests per client per
-minute, shared across all locations.
-
-CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) tests every push and pull request and
-deploys `main` when the tests pass. It needs two repository secrets:
-
-| Secret | Where to get it |
+| Endpoint | Returns |
 |---|---|
-| `CLOUDFLARE_API_TOKEN` | Cloudflare dashboard → My Profile → API Tokens → "Edit Cloudflare Workers" template, scoped to your account and the `mallen.us` zone |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare dashboard → the zone's overview page, right-hand column |
+| `GET /api/v1/emblems?input=&theme=&count=1..10` | Emblems with descriptions, version-pinned image URLs, configs and SVG (`svg=0` leaves it out) |
+| `GET /{theme}/{input}.svg?v=` | The emblem as an image, for `<img>` tags |
+| `GET /{theme}/{input}.json?v=` | The emblem's description and config |
+| `GET /api/v1/themes` | Themes, versions and screen colours |
+| `GET /api/v1/openapi.json` | An OpenAPI 3.1 description |
 
-By hand: `just cf-login` once, then `just deploy`. `just worker-dev` runs it locally on
-Cloudflare's runtime; `just cf-tail` streams production logs. Docker (`just docker-up`,
-`just release`) remains for self-hosting.
+All take `v` (version), `size`, `backdrop=dark` and `rim` (a colour). The first emblem in a batch
+is always the plain emblem for the input; the rest are fixed variants, so a batch never changes
+either. CORS is open, responses pinned with `v` are cacheable forever, and each client may make
+120 requests a minute. The full reference, with errors and examples, is at
+[emblazon.mallen.us/docs](https://emblazon.mallen.us/docs).
 
-## Credits
+### As a library
 
-Some charges are adapted from [game-icons.net](https://game-icons.net) (CC BY 3.0). Anything that
-shows emblems must credit them; the exact line is in [assets/CREDITS.md](assets/CREDITS.md), and
-each adapted charge carries it as `CHARGES[id].credit`.
+No dependencies, no Node APIs, synchronous. Requires Node 23.6+ or any modern browser.
 
-## Run
+```ts
+import { emblazon, emblazonMany } from 'emblazon';
 
-Needs Node 23.6+ and [just](https://github.com/casey/just). No `npm install`: there are no dependencies.
+const { svg, description, config } = emblazon('ada@example.com', { theme: 'heraldry', size: 64 });
+
+// Up to ten different emblems for one input: the same set the API returns.
+const set = emblazonMany(`${sessionId}:${heroName}`, { theme: 'patch', count: 10 });
+
+// Store the choice as { theme, input, version } and draw it again any time:
+const again = emblazon(chosen.input, { theme: chosen.theme, version: chosen.version });
+```
+
+- `emblazonOptions(seed, { count })` picks a set for pickers that varies the main motif where it can.
+- `backdrop: 'dark'` adds a thin rim so the edge reads on near-black screens; `rim` sets its colour.
+- `version` defaults to the theme's latest. Pin it if your emblems must never change.
+- TypeScript apps with bundler resolution (Vite) can import `src/` directly; `just build` writes
+  plain ES modules to `dist/` for everything else.
+- Show `ATTRIBUTION` somewhere, such as an about screen; each emblem also lists its own `credits`.
+
+## Develop
+
+Needs Node 23.6+ and [just](https://github.com/casey/just). There is nothing to install: no
+dependencies.
 
 | Command | What it does |
 |---|---|
-| `just dev` | site and API with reload on :4747 (`PORT` in `.env`): home and playground `/`, API docs `/docs`, picker `/picker`, sheets `/sheet/{theme}`, emblems at `/api/v1/emblems` and `/{theme}/{input}.svg` |
-| `just test` | frozen-version snapshots and corpus digest, rule checks per theme and version, asset contract |
-| `just typecheck` | type-check the library as a strict browser app would |
-| `just stats [count] [theme] [version]` | how often two inputs look alike |
-| `just assets` | redraw geometric charges, re-import game-icons from the vendored copies, validate and compile |
-| `just build` | plain ES modules in `dist/` |
-| `just worker-dev` / `just deploy` | run on Cloudflare's runtime locally / test and deploy to Cloudflare |
-| `just docker-up` / `just docker-down` | run the preview server and API in Docker |
-| `just release [tag]` | build and push a linux/amd64 image to `REGISTRY_URL` |
+| `just dev` | The site and API with reload on :4747: playground, docs, picker, sheets |
+| `just test` | Frozen-version snapshots, corpus digests, per-theme rules, the API and the request handler |
+| `just typecheck` | Type-checks the library and the Worker as a strict browser app would |
+| `just stats [count] [theme] [version]` | How often two inputs look alike |
+| `just assets` | Redraws and re-imports heraldic charges, then validates and compiles them |
+| `just build` | Plain ES modules in `dist/` |
+| `just readme-images` | Redraws the images in this README from real emblems |
 
 Design, asset inventory and roadmap: [docs/PLAN.md](docs/PLAN.md).
+
+## Deploy
+
+**Cloudflare Workers** runs production at https://emblazon.mallen.us
+([wrangler.toml](wrangler.toml)). Pages and the picker's modules are prerendered into `site/` and
+served as static assets. The Worker ([worker.ts](worker.ts)) answers the API and images through
+the same handler as the Node server, rate-limited by Cloudflare's binding.
+
+[CI](.github/workflows/ci.yml) tests every push and pull request and deploys `main` when the
+tests pass. It needs two repository secrets:
+
+| Secret | Where to find it |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | Dashboard → My Profile → API Tokens → "Edit Cloudflare Workers" template, scoped to the account and the `mallen.us` zone |
+| `CLOUDFLARE_ACCOUNT_ID` | The string after `com.cloudflare.api.account.` on the token summary, or in the dashboard URL |
+
+By hand: `just cf-login` once, then `just deploy`. `just worker-dev` runs the Worker locally on
+Cloudflare's runtime, and `just cf-tail` streams production logs.
+
+**Docker** remains for self-hosting: `just docker-up`, or `just release [tag]` to push an image
+to `REGISTRY_URL`. The Node server reads these settings (see [.env.example](.env.example)):
+
+| Setting | Default | What it does |
+|---|---|---|
+| `PUBLIC_URL` | the request's host | Base URL for links in responses and docs. Set it in production. |
+| `TRUST_PROXY` | off | Behind a proxy, take client IPs and the host from its forwarding headers. Without it, everyone behind the proxy shares one rate limit. |
+| `RATE_LIMIT_PER_MINUTE` | `120` | Sustained requests per client per minute; `0` turns limiting off. |
+| `RATE_LIMIT_BURST` | `60` | Requests a client may make at once. |
+
+## Credits
+
+Some heraldic charges are adapted from [game-icons.net](https://game-icons.net) (CC BY 3.0).
+Anything that shows emblems must credit them: the exact line is in
+[assets/CREDITS.md](assets/CREDITS.md), and each adapted charge carries it as `CHARGES[id].credit`.

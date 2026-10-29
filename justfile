@@ -52,6 +52,10 @@ assets:
 build:
     node scripts/build.ts
 
+# Redraw the README's images in docs/images/ from real emblems (PNGs need rsvg-convert: brew install librsvg)
+readme-images:
+    node scripts/readme-images.ts
+
 # Clean all generated files
 clean:
     rm -rf dist out site .wrangler
