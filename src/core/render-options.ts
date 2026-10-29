@@ -11,6 +11,12 @@ export interface RenderOptions {
   backdrop?: 'light' | 'dark';
   /** Rim colour for a dark backdrop, e.g. a theme's accent. Defaults to a warm off-white. */
   rim?: string;
+  /**
+   * 'flat': muted theme colours, no shading, light outline (the look of jb-rpg's symbols).
+   * 'classic': the original bright, shaded look. Defaults to whatever the theme version was
+   * released with, so pinned versions never change.
+   */
+  style?: 'flat' | 'classic';
 }
 
 export const DEFAULT_RIM = '#EDE6D6';

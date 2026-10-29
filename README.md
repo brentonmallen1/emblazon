@@ -3,7 +3,9 @@
 Deterministic emblems from any string — like Robohash, but coats of arms and mission patches.
 The same input always gives the same emblem, along with a description:
 
-> **brenton** → *Vert, a fleur-de-lis Argent, a bordure Or.* (v1)
+> **brenton** → *Vert, a fleur-de-lis Argent, a bordure Or.* (heraldry v1)
+>
+> Themes: `heraldry` (coats of arms, v3) and `patch` (mission patches, v1).
 
 Installable and app-agnostic; its themes follow jb-rpg's six (see [docs/PLAN.md §0](docs/PLAN.md)).
 No runtime dependencies. Requires Node 23.6+ (runs TypeScript directly).
@@ -26,14 +28,17 @@ released version is frozen and tested byte-for-byte. `config` can be stored and 
 import { emblazonOptions, emblazon, ATTRIBUTION } from 'emblazon';
 
 // Six visibly different symbols, stable for this seed. Re-roll with `${seed}:${n}`.
-const options = emblazonOptions(`${sessionId}:${heroName}`, { count: 6, backdrop: 'dark', rim: '#d9a557' });
+const options = emblazonOptions(`${sessionId}:${heroName}`, { theme: 'heraldry', count: 6 });
 
-// Store the choice as { input, version }; regenerate any time:
-const { svg } = emblazon(chosen.input, { version: chosen.version, backdrop: 'dark' });
+// Store the choice as { theme, input, version }; regenerate any time:
+const { svg } = emblazon(chosen.input, { theme: chosen.theme, version: chosen.version });
 ```
 
 - Runs in the browser and Node alike: no dependencies, no `node:` imports, synchronous.
-- `backdrop: 'dark'` adds a light rim so the shield edge reads on near-black screens; `rim` takes a
+- Emblems are drawn flat by default (muted colours, thin accent line work, made for dark
+  screens). Pinned older versions keep their original look; `style: 'classic'` asks for the
+  bright, shaded heraldry explicitly.
+- `backdrop: 'dark'` adds a light rim so the edge reads on near-black screens; `rim` takes a
   theme accent colour.
 - Show `ATTRIBUTION` somewhere (about or rules screen); each emblem also lists its own `credits`.
 - TypeScript apps with bundler resolution (Vite) can import `src/` directly (`exports` points

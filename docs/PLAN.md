@@ -7,11 +7,11 @@ Deterministic, themed avatar generator in the spirit of Robohash. Any input stri
 username, UUID) always produces the same emblem. Themes are **coats of arms** first, **mission
 patches** second, more later. Emblems are imagery only: no text inside them.
 
-Status: **Phase 6 in progress** — a `patch` theme works end to end (procedural planets,
-parametric craft, picker, sheet at `/sheet/patch`) but is **not released or frozen**: its style
-is waiting on §8.8 (jb-rpg's own symbol mock-ups are flatter and use names/initials), and it
-measures 1 in ~5,400 lookalike pairs against the 1 in 10,000 target. Project tooling (justfile,
-Docker, `.env.example`) is in place.
+Status: **Phase 6 done** — all themes take jb-rpg's flat look (§8.8): `heraldry@3` (default) is
+v2's rules drawn flat in muted tinctures with a cream rim; `patch@1` is a flat mission patch
+(accent rings, dark band, flat scene, light craft silhouettes). heraldry v1–v2 keep their
+classic look byte-for-byte. Lookalike chance per pair: heraldry 1 in ~51,700, patch 1 in
+~11,400. Next: Phase 7 (insignia, seal, sigil, badge) in the same flat style.
 
 ---
 
@@ -323,8 +323,8 @@ potrace + manual cleanup. All non-original assets recorded in `assets/CREDITS.md
 | **3. Generation** | placements, rules, `generate` / `render` / `blazon`, API routes, tests, stats, sheet section 4 | 200-emblem sheet looks good; rule + determinism tests pass; collisions < 1% |
 | **4. Heraldic depth** ✅ | 45 game-icons charges (vendored, credited), furs (ermine, ermines, erminois, pean, vair), counterchanging, v1 frozen by a corpus digest test | `heraldry@2` released; v1 byte-identical; v2 lookalike chance 1 in ~51,700 per pair, 99.1% distinct |
 | **5. App-ready library** ✅ | pure-JS sync SHA-256 (identical output), `emblazonOptions(seed, {count})` (distinct looks and charges, stable, each stores `{input, version}`), `backdrop: 'dark'` rim, `ATTRIBUTION` + per-emblem `credits`, `exports` → `src/`, `npm run build` → `dist/`, `/picker` demo running in the browser | the picker runs client-side (6 options in ~3 ms); `src/` passes a strict browser `tsc` (`tsconfig.browser.json`); built JS matches source byte-for-byte |
-| **6. Mission patches** | §4 inventory, parts-based vehicles; imagery only (no text ring) | `patch@1` meets the same gates; jb-rpg deep_space uses it |
-| **7. The remaining theme styles** | `insignia` (cyberpunk), `seal` (horror), `sigil` (insanity), `badge` (modern), reusing vendored art by theme tag; one `theme` option across the API | each meets the same gates on its theme's background |
+| **6. Mission patches + flat style** ✅ | flat `patch@1`: 6 frame shapes, 4 ring styles, 16 accent palettes, 7 flat bodies (incl. the mock-up's dune world), parametric craft (rocket, capsule, lander, rover, satellite, probe), orbit/swoosh, crew stars in the band; flat `heraldry@3`; `style` option; per-version default style | patch 1 in ~11,400 lookalike pairs; heraldry v1–v3 and patch v1 frozen by corpus digests |
+| **7. The remaining theme styles** | flat like jb-rpg's mock-ups: `insignia` (cyberpunk crew tag), `sigil` (horror: line-art seal, eye/triangle/circle motifs), `mark` (insanity: restless spiral line work), `badge` (modern), reusing vendored art by theme tag | each meets the same gates on its theme's background |
 | **8. Packaging** | installable package: published (npm or a git dependency) with `dist/` JS and `.d.ts` types alongside the TS source; PNG via resvg; Docker image for the HTTP service | an app adds it with one install command and imports it |
 | **9. Achievement mode** (optional) | imagery-only display around the shield for large sizes: helm, crest, mantling, supporters; no motto | — |
 
@@ -342,9 +342,8 @@ potrace + manual cleanup. All non-original assets recorded in `assets/CREDITS.md
 5. **Raster output:** is SVG-only fine for the first deploy?
 6. **Deploy target:** self-hosted Docker (e.g. Unraid) vs. a static/edge function.
 7. **License** for code and original art (e.g. MIT code + CC BY art).
-8. **Style direction per theme.** jb-rpg's mock-ups (fantasy shield, deep-space patch, cyberpunk
-   crew tag, horror sigil, insanity spiral) are flat and minimal: two or three colours, thin line
-   work in the theme accent, and some carry the hero's name or initials (name ring on the patch,
-   "W/A" + code on the crew tag). emblazon's heraldry and patches are richer illustrations with
-   no text. Options: match the mock-ups' flat style, keep the illustrated style, or offer both as
-   a `style` option. And: is text (names, initials) allowed in some themes?
+8. ~~Style direction~~ — decided: match jb-rpg's flat mock-ups (two or three colours, thin
+   accent line work, no shading). Versions released before this keep their look; the
+   `style` render option can still ask for `classic` heraldry. Still open: **text** — the
+   mock-ups put the hero's name on the patch ring and initials on the cyberpunk tag; emblazon
+   draws no text yet. Would need the name passed in (it isn't the seed) and fonts as paths.

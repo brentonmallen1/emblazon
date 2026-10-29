@@ -17,8 +17,8 @@ import { cell, matrix, page, row, section, tile } from './layout.ts';
 const BASE: Patch = {
   shape: 'circle',
   border: 'stitched',
-  palette: 'nasa',
-  sky: { seed: 7, stars: 40, nebula: false },
+  palette: 'amber',
+  sky: { seed: 7, stars: 18 },
   body: { kind: 'earth', placement: 'horizon', seed: 3 },
   vehicle: { kind: 'rocket', nose: 'ogive', fins: 'delta', boosters: false, stages: 2, flame: true },
   angle: 18,
@@ -35,7 +35,7 @@ export function patchSheet(): string {
     'Contact sheet: frames, palettes, planets, craft, trajectories and accents, then generated patches.',
     [
       section('Shapes × borders', matrix(BORDERS, SHAPES.map((shape) => `<div class="rowlabel">${shape}</div>` + BORDERS.map((border) => cell(renderPatch(with_({ shape, border }), { size: 96 }))).join('')))),
-      section('Palettes', row(PALETTE_IDS.map((palette, i) => show(with_({ palette, sky: { ...BASE.sky, nebula: i % 2 === 0 } }), palette)))),
+      section('Palettes', row(PALETTE_IDS.map((palette) => show(with_({ palette }), palette)))),
       section(
         'Planets',
         row(
@@ -53,7 +53,7 @@ export function patchSheet(): string {
           show(with_({ trajectory: { kind: 'swoosh', flip: true }, angle: -18 }), 'swoosh, flipped'),
           show(with_({ trajectory: { kind: 'orbit', flip: false }, vehicle: { kind: 'satellite', panels: 'quad' }, body: undefined }), 'orbit'),
           show(with_({ accents: { crew: 7, moon: true, constellation: true, seed: 4 } }), '7 crew, moon, constellation'),
-          show(with_({ accents: { crew: 0, moon: false, constellation: false, seed: 1 }, sky: { seed: 9, stars: 60, nebula: true } }), 'no crew, nebula'),
+          show(with_({ accents: { crew: 0, moon: false, constellation: false, seed: 1 }, sky: { seed: 9, stars: 26 } }), 'no crew, more stars'),
         ]),
       ),
       section('At avatar sizes', `<div class="sizes">${[32, 48, 64, 96, 128].map((s) => show(generatePatch('sizes-demo'), `${s}px`, s)).join('')}</div>`),

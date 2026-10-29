@@ -1,34 +1,33 @@
 import { mulberry32, type Rng } from '../../core/rng.ts';
 import { n } from '../../core/svg.ts';
-import { OUTLINE } from './frame.ts';
 import type { BodyKind, BodyPlacement } from './types.ts';
 
-/** Where a body sits: a big limb along the bottom, or a smaller planet in an upper corner. */
+/** Where a body sits: a broad limb along the bottom, or a small planet in an upper corner. */
 export function bodyGeometry(placement: BodyPlacement): { cx: number; cy: number; r: number } {
   switch (placement) {
     case 'horizon':
       return { cx: 120, cy: 302, r: 150 };
     case 'left':
-      return { cx: 72, cy: 82, r: 38 };
+      return { cx: 82, cy: 86, r: 30 };
     case 'right':
-      return { cx: 168, cy: 82, r: 38 };
+      return { cx: 158, cy: 86, r: 30 };
   }
 }
 
-/** Where details go: on a corner planet anywhere on the disc, on a horizon only in the visible band. */
+/** Where details go: anywhere on a corner planet; on a horizon, only in the visible strip. */
 interface Surface {
   cx: number;
   cy: number;
   r: number;
   horizon: boolean;
+  /** Detail scale: the planet's radius, or the visible strip's height on a horizon. */
+  size: number;
   spot: (reach?: number) => [number, number];
 }
 
 interface BodyLook {
   base: string;
   detail: (rng: Rng, s: Surface) => string;
-  /** Thin glow just outside the limb. */
-  atmosphere?: string;
 }
 
 const circlePath = (cx: number, cy: number, r: number): string =>
@@ -51,7 +50,6 @@ function blob(rng: Rng, cx: number, cy: number, size: number, points = 9): strin
   return `${d}Z`;
 }
 
-/** A point inside the disc, biased away from the very edge. */
 function inside(rng: Rng, cx: number, cy: number, r: number, reach = 0.85): [number, number] {
   const a = rng() * Math.PI * 2;
   const d = Math.sqrt(rng()) * r * reach;
@@ -60,94 +58,96 @@ function inside(rng: Rng, cx: number, cy: number, r: number, reach = 0.85): [num
 
 function craters(rng: Rng, s: Surface, color: string, count: number): string {
   let d = '';
-  const size = s.horizon ? 34 : s.r;
   for (let i = 0; i < count; i++) {
     const [x, y] = s.spot();
-    d += circlePath(x, y, size * (0.05 + rng() * 0.12));
+    d += circlePath(x, y, s.size * (0.06 + rng() * 0.1));
   }
-  return `<path d="${d}" fill="${color}" fill-opacity="0.8"/>`;
+  return `<path d="${d}" fill="${color}"/>`;
 }
 
 const LOOKS: Readonly<Record<BodyKind, BodyLook>> = {
   earth: {
-    base: '#2F6FD6',
-    atmosphere: '#9FD3FF',
+    base: '#3E6FB0',
     detail: (rng, s) => {
-      const size = s.horizon ? 40 : s.r;
       let land = '';
-      for (let i = 0; i < 4; i++) {
-        const [x, y] = s.spot(0.8);
-        land += blob(rng, x, y, size * (0.16 + rng() * 0.18));
+      for (let i = 0; i < 3; i++) {
+        const [x, y] = s.spot(0.75);
+        land += blob(rng, x, y, s.size * (0.18 + rng() * 0.16));
       }
-      let clouds = '';
-      for (let i = 0; i < 5; i++) {
-        const [x, y] = s.spot(0.9);
-        clouds += `<ellipse cx="${n(x)}" cy="${n(y)}" rx="${n(size * (0.12 + rng() * 0.16))}" ry="${n(size * 0.035)}" fill="#FFFFFF" fill-opacity="0.85"/>`;
-      }
-      return `<path d="${land}" fill="#4CAF50"/>` + clouds;
+      return `<path d="${land}" fill="#5E9E6A"/>`;
     },
   },
-  moon: { base: '#B9BCC4', detail: (rng, s) => craters(rng, s, '#8C9099', 9) },
+  moon: { base: '#B7B2A6', detail: (rng, s) => craters(rng, s, '#9A958A', 7) },
   mars: {
-    base: '#C4532C',
-    // The polar cap only reads on a whole planet; on a horizon it would be a white stripe.
+    base: '#C8693E',
     detail: (rng, s) =>
-      craters(rng, s, '#8E3417', 6) +
-      (s.horizon ? '' : `<ellipse cx="${n(s.cx)}" cy="${n(s.cy - s.r * 0.92)}" rx="${n(s.r * 0.32)}" ry="${n(s.r * 0.12)}" fill="#F4EDE6"/>`),
+      craters(rng, s, '#A4532F', 5) +
+      (s.horizon ? '' : `<ellipse cx="${n(s.cx)}" cy="${n(s.cy - s.r * 0.9)}" rx="${n(s.r * 0.32)}" ry="${n(s.r * 0.12)}" fill="#EFE4D6"/>`),
   },
   gasGiant: {
-    base: '#E9C99A',
-    detail: (rng, { cx, cy, r, spot }) => {
-      // Wavy horizontal bands in alternating tones, plus one storm.
-      const tones = ['#C98B55', '#F3DDB8', '#B9744A', '#E1B07C'];
+    base: '#D9B07A',
+    detail: (rng, { cx, cy, r, horizon, spot, size }) => {
+      // Flat bands; on a horizon only the visible top needs them.
       let bands = '';
-      let y = cy - r;
-      for (let i = 0; y < cy + r; i++) {
-        const h = r * (0.12 + rng() * 0.16);
-        const w = r * 0.04;
-        bands +=
-          `<path d="M${n(cx - r)} ${n(y)}Q${n(cx - r / 2)} ${n(y - w)} ${n(cx)} ${n(y)}T${n(cx + r)} ${n(y)}V${n(y + h)}H${n(cx - r)}Z" fill="${tones[i % tones.length]}"/>`;
-        y += h * (1.4 + rng());
+      let y = horizon ? cy - r + 10 : cy - r + r * 0.25;
+      const end = horizon ? cy - r + 60 : cy + r;
+      while (y < end) {
+        const h = size * (0.1 + rng() * 0.12);
+        bands += `<rect x="${n(cx - r)}" y="${n(y)}" width="${n(2 * r)}" height="${n(h)}" fill="#B98B57"/>`;
+        y += h * (2 + rng() * 1.5);
       }
       const [sx, sy] = spot(0.5);
-      return bands + `<ellipse cx="${n(sx)}" cy="${n(sy)}" rx="${n(r * 0.16)}" ry="${n(r * 0.09)}" fill="#A9542E"/>`;
+      return bands + `<ellipse cx="${n(sx)}" cy="${n(sy)}" rx="${n(size * 0.16)}" ry="${n(size * 0.09)}" fill="#A5673E"/>`;
     },
   },
   ringed: {
-    base: '#E2C88F',
+    base: '#D8C08A',
     detail: (rng, { cx, cy, r }) => {
       let bands = '';
-      for (let i = 0; i < 4; i++) {
-        const y = cy - r + (i + 0.5 + rng() * 0.4) * (r / 2);
-        bands += `<rect x="${n(cx - r)}" y="${n(y)}" width="${n(2 * r)}" height="${n(r * (0.07 + rng() * 0.08))}" fill="#C9A866"/>`;
+      for (let i = 0; i < 3; i++) {
+        const y = cy - r + (i + 0.6 + rng() * 0.4) * (r / 1.7);
+        bands += `<rect x="${n(cx - r)}" y="${n(y)}" width="${n(2 * r)}" height="${n(r * 0.1)}" fill="#BFA36A"/>`;
       }
       return bands;
     },
   },
   ice: {
-    base: '#CFE9F5',
+    base: '#BFD9E3',
     detail: (rng, s) => {
-      const r = s.horizon ? 40 : s.r;
       let d = '';
-      for (let i = 0; i < 6; i++) {
-        let [x, y] = s.spot(0.9);
+      for (let i = 0; i < 5; i++) {
+        let [x, y] = s.spot(0.85);
         d += `M${n(x)} ${n(y)}`;
         for (let k = 0; k < 3; k++) {
-          x += (rng() - 0.5) * r * 0.5;
-          y += (rng() - 0.5) * r * 0.5;
+          x += (rng() - 0.5) * s.size * 0.5;
+          y += (rng() - 0.5) * s.size * 0.4;
           d += `L${n(x)} ${n(y)}`;
         }
       }
-      return `<path d="${d}" fill="none" stroke="#7FB4CF" stroke-width="${n(Math.max(1, r * 0.025))}" stroke-linecap="round" stroke-linejoin="round"/>`;
+      return `<path d="${d}" fill="none" stroke="#8FB7C6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`;
+    },
+  },
+  dune: {
+    base: '#D4A060',
+    // Wind-cut ridges: soft waves across the sand.
+    detail: (rng, { cx, cy, r, horizon, size }) => {
+      let d = '';
+      const top = horizon ? cy - r + 14 : cy - r * 0.6;
+      for (let i = 0; i < 3; i++) {
+        const y = top + i * size * (horizon ? 0.3 : 0.45) + rng() * 4;
+        const w = size * 0.08;
+        d += `M${n(cx - r)} ${n(y)}Q${n(cx - r / 2)} ${n(y - w)} ${n(cx)} ${n(y)}T${n(cx + r)} ${n(y)}`;
+      }
+      return `<path d="${d}" fill="none" stroke="#B9844A" stroke-width="2" stroke-linecap="round"/>`;
     },
   },
 };
 
 /**
- * A planet as three layers so a ring can pass behind and in front of it, and a vehicle can be
- * drawn between (a horizon planet sits behind everything else).
+ * A planet as two layers so a ring can pass behind and in front of it, with the craft drawn
+ * after both. Flat: one colour, flat details, no shading or outline.
  */
-export function bodyLayers(kind: BodyKind, placement: BodyPlacement, seed: number, id: string): { defs: string; back: string; front: string } {
+export function bodyLayers(kind: BodyKind, placement: BodyPlacement, seed: number, id: string, ringColor: string): { defs: string; back: string; front: string } {
   const { cx, cy, r } = bodyGeometry(placement);
   const look = LOOKS[kind];
   const rng = mulberry32(seed);
@@ -158,38 +158,27 @@ export function bodyLayers(kind: BodyKind, placement: BodyPlacement, seed: numbe
     cy,
     r,
     horizon,
-    // A horizon shows only its top: keep details in the strip between the limb and the border.
-    spot: horizon ? () => [cx + (rng() * 2 - 1) * 100, cy - r + 8 + rng() * 64] : (reach = 0.85) => inside(rng, cx, cy, r, reach),
+    size: horizon ? 48 : r,
+    // A horizon shows only its top: keep details in the strip between the limb and the inner ring.
+    spot: horizon ? () => [cx + (rng() * 2 - 1) * 70, cy - r + 8 + rng() * 40] : (reach = 0.85) => inside(rng, cx, cy, r, reach),
   };
-  const defs =
-    `<clipPath id="${id}-body"><path d="${disc}"/></clipPath>` +
-    // Lit from the upper left: transparent there, darkening toward the far side.
-    `<radialGradient id="${id}-terminator" cx="0.3" cy="0.25" r="0.95">` +
-    `<stop offset="0.45" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.55"/></radialGradient>`;
 
-  const ring = kind === 'ringed' ? ringParts(cx, cy, r, id) : undefined;
-  const planet =
-    (look.atmosphere ? `<path d="${circlePath(cx, cy, r + 3)}" fill="${look.atmosphere}" fill-opacity="0.45"/>` : '') +
-    `<path d="${disc}" fill="${look.base}"/>` +
-    `<g clip-path="url(#${id}-body)">${look.detail(rng, surface)}<path d="${disc}" fill="url(#${id}-terminator)"/></g>` +
-    `<path d="${disc}" fill="none" stroke="${OUTLINE}" stroke-width="2.5"/>`;
-
+  const ring = kind === 'ringed' ? ringParts(cx, cy, r, id, ringColor) : undefined;
+  const planet = `<path d="${disc}" fill="${look.base}"/><g clip-path="url(#${id}-body)">${look.detail(rng, surface)}</g>`;
   return {
-    defs: defs + (ring?.defs ?? ''),
+    defs: `<clipPath id="${id}-body"><path d="${disc}"/></clipPath>` + (ring?.defs ?? ''),
     back: (ring?.back ?? '') + planet,
     front: ring?.front ?? '',
   };
 }
 
-/** A tilted ring: drawn whole behind the planet, then its near half again in front. */
-function ringParts(cx: number, cy: number, r: number, id: string): { defs: string; back: string; front: string } {
+/** A tilted ring line: drawn whole behind the planet, then its near half again in front. */
+function ringParts(cx: number, cy: number, r: number, id: string, color: string): { defs: string; back: string; front: string } {
   const tilt = -18;
-  const ring = (w: number, color: string) =>
-    `<ellipse cx="${n(cx)}" cy="${n(cy)}" rx="${n(r * 1.85)}" ry="${n(r * 0.42)}" fill="none" stroke="${color}" stroke-width="${n(w)}" transform="rotate(${tilt} ${n(cx)} ${n(cy)})"/>`;
-  const both = ring(r * 0.2 + 3, OUTLINE) + ring(r * 0.2, '#D8BE84') + ring(r * 0.05, '#B8995E');
+  const ring = `<ellipse cx="${n(cx)}" cy="${n(cy)}" rx="${n(r * 1.8)}" ry="${n(r * 0.42)}" fill="none" stroke="${color}" stroke-width="${n(Math.max(2, r * 0.08))}" transform="rotate(${tilt} ${n(cx)} ${n(cy)})"/>`;
   return {
     defs: `<clipPath id="${id}-ringfront"><rect x="${n(cx - r * 2.2)}" y="${n(cy)}" width="${n(r * 4.4)}" height="${n(r * 2.2)}" transform="rotate(${tilt} ${n(cx)} ${n(cy)})"/></clipPath>`,
-    back: both,
-    front: `<g clip-path="url(#${id}-ringfront)">${both}</g>`,
+    back: ring,
+    front: `<g clip-path="url(#${id}-ringfront)">${ring}</g>`,
   };
 }

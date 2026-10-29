@@ -1,6 +1,6 @@
 import { M, n, type Pt } from '../../core/svg.ts';
 import { BOTTOM, FESS, LEFT, RIGHT, TOP } from './geometry.ts';
-import { TINCTURE_HEX, type Fur } from './tinctures.ts';
+import { TINCTURE_HEX, type Fur, type Tincture } from './tinctures.ts';
 
 /** How a fur is drawn: a ground colour and a repeating pattern of spots or pelts over it. */
 export interface FurLook {
@@ -10,8 +10,8 @@ export interface FurLook {
   d: string;
 }
 
-export function furLook(fur: Fur): FurLook {
-  const { or, argent, sable, azure } = TINCTURE_HEX;
+export function furLook(fur: Fur, hex: Readonly<Record<Tincture, string>> = TINCTURE_HEX): FurLook {
+  const { or, argent, sable, azure } = hex;
   switch (fur) {
     case 'ermine':
       return { ground: argent, pattern: sable, d: ERMINE_SPOTS };

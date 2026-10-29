@@ -8,7 +8,7 @@ import { furLook } from './furs.ts';
 import { BLEED, CANVAS, FIELD_H, FIELD_OFFSET, FIELD_W } from './geometry.ts';
 import { BORDURE_WIDTH, ordinaryPath, type Ordinary } from './ordinaries.ts';
 import { SHIELD_PATHS } from './shields.ts';
-import { COUNTERCHANGED, OUTLINE, TINCTURE_HEX, isFur, type Counterchanged, type Paint, type Tincture } from './tinctures.ts';
+import { COUNTERCHANGED, FLAT_EDGE, FLAT_TINCTURE_HEX, OUTLINE, TINCTURE_HEX, isFur, type Counterchanged, type Paint, type Tincture } from './tinctures.ts';
 
 export type { RenderOptions } from '../../core/render-options.ts';
 
@@ -17,18 +17,25 @@ interface Context {
   id: string;
   field?: Field;
   defs: string[];
+  /** Tincture colours for the chosen style. */
+  hex: Readonly<Record<Tincture, string>>;
+  flat: boolean;
 }
 
 /** Pure: the same arms and options always produce the same SVG string. */
-export function renderArms(arms: Arms, { size, finish = 'shaded', backdrop = 'light', rim = DEFAULT_RIM }: RenderOptions = {}): string {
+export function renderArms(
+  arms: Arms,
+  { size, finish = 'shaded', backdrop = 'light', rim = DEFAULT_RIM, style = 'classic' }: RenderOptions = {},
+): string {
   // Ids derive from the content so several emblems can share one HTML document.
-  const id = `em${fnv1a(JSON.stringify(arms))}`;
+  const flat = style === 'flat';
+  const id = `em${fnv1a(JSON.stringify(arms))}${flat ? 'f' : ''}`;
   const shield = SHIELD_PATHS[arms.shield];
-  const shaded = finish === 'shaded';
-  const ctx: Context = { id, field: arms.field, defs: [] };
+  const shaded = !flat && finish === 'shaded';
+  const ctx: Context = { id, field: arms.field, defs: [], hex: flat ? FLAT_TINCTURE_HEX : TINCTURE_HEX, flat };
 
   const layers =
-    fieldLayer(arms.field) +
+    fieldLayer(arms.field, ctx) +
     (arms.ordinary ? ordinaryLayer(arms.ordinary, shield, ctx) : '') +
     (arms.charges ? chargeLayer(arms.charges, `${id}-ch`, ctx) : '') +
     (shaded ? `<rect width="${FIELD_W}" height="${FIELD_H}" fill="url(#${id}-shade)"/>` : '');
@@ -43,19 +50,24 @@ export function renderArms(arms: Arms, { size, finish = 'shaded', backdrop = 'li
     `<g transform="translate(${FIELD_OFFSET[0]} ${FIELD_OFFSET[1]})">` +
     `<g clip-path="url(#${id}-clip)">${layers}</g>` +
     (backdrop === 'dark' ? `<path d="${shield}" fill="none" stroke="${escapeXml(rim)}" stroke-width="9" stroke-linejoin="round"/>` : '') +
-    `<path d="${shield}" fill="none" stroke="${OUTLINE}" stroke-width="4" stroke-linejoin="round"/>` +
+    (flat
+      ? // A dark hairline under the rim keeps it apart from argent fields.
+        `<path d="${shield}" fill="none" stroke="${OUTLINE}" stroke-width="9" stroke-linejoin="round"/>` +
+        `<path d="${shield}" fill="none" stroke="${FLAT_EDGE}" stroke-width="6" stroke-linejoin="round"/>`
+      : `<path d="${shield}" fill="none" stroke="${OUTLINE}" stroke-width="4" stroke-linejoin="round"/>`) +
     `</g></svg>`
   );
 }
 
-function fieldLayer(field: Field): string {
+function fieldLayer(field: Field, ctx: Context): string {
   if (field.kind === 'plain') {
-    if (!isFur(field.tincture)) return baseFill(TINCTURE_HEX[field.tincture]);
-    const fur = furLook(field.tincture);
+    if (!isFur(field.tincture)) return baseFill(ctx.hex[field.tincture]);
+    const fur = furLook(field.tincture, ctx.hex);
     return baseFill(fur.ground) + `<path d="${fur.d}" fill="${fur.pattern}"/>`;
   }
   const [first, second] = field.tinctures;
-  return baseFill(TINCTURE_HEX[first]) + `<path d="${secondRegion(field)}" fill="${TINCTURE_HEX[second]}" ${stroke(1.5)}/>`;
+  // The flat style lets the two tinctures meet without a drawn line.
+  return baseFill(ctx.hex[first]) + `<path d="${secondRegion(field)}" fill="${ctx.hex[second]}"${ctx.flat ? '' : ` ${stroke(1.5)}`}/>`;
 }
 
 function ordinaryLayer({ kind, line, tincture }: Ordinary, shield: string, ctx: Context): string {
@@ -67,7 +79,7 @@ function ordinaryLayer({ kind, line, tincture }: Ordinary, shield: string, ctx: 
     return `<path d="${shield}" fill="none" stroke="${OUTLINE}" stroke-width="${w + 4}"/>` + paint(tincture, band, ctx);
   }
   const d = ordinaryPath(kind, line);
-  if (tincture !== COUNTERCHANGED && !isFur(tincture)) return `<path d="${d}" fill="${TINCTURE_HEX[tincture]}" ${stroke(2)}/>`;
+  if (tincture !== COUNTERCHANGED && !isFur(tincture)) return `<path d="${d}" fill="${ctx.hex[tincture]}" ${stroke(2)}/>`;
   // Patterned paints draw the shape, then its outline on top so the pattern can't cover it.
   return paint(tincture, (color) => `<path d="${d}" fill="${color}"/>`, ctx, d) + `<path d="${d}" fill="none" ${stroke(2)}/>`;
 }
@@ -81,9 +93,9 @@ function paint(p: Paint | Counterchanged, shape: (color: string) => string, ctx:
     const [first, second] = counterchangeClips(ctx);
     return `<g clip-path="url(#${first.clip})">${shape(first.color)}</g><g clip-path="url(#${second.clip})">${shape(second.color)}</g>`;
   }
-  if (!isFur(p)) return shape(TINCTURE_HEX[p]);
+  if (!isFur(p)) return shape(ctx.hex[p]);
   if (!clip) throw new Error(`${p} needs a shape to clip its pattern to`);
-  const fur = furLook(p);
+  const fur = furLook(p, ctx.hex);
   const clipId = `${ctx.id}-fur${ctx.defs.length}`;
   ctx.defs.push(`<clipPath id="${clipId}"><path d="${clip}"/></clipPath>`);
   return shape(fur.ground) + `<path d="${fur.d}" fill="${fur.pattern}" clip-path="url(#${clipId})"/>`;
@@ -107,8 +119,8 @@ function counterchangeClips(ctx: Context): [{ clip: string; color: string }, { c
     );
   }
   return [
-    { clip: a, color: TINCTURE_HEX[second] },
-    { clip: b, color: TINCTURE_HEX[first] },
+    { clip: a, color: ctx.hex[second] },
+    { clip: b, color: ctx.hex[first] },
   ];
 }
 
@@ -122,7 +134,7 @@ const CHARGE_OUTLINE = 3.5;
 export function renderCharge(charge: ChargeId, tincture: Tincture, { size }: Pick<RenderOptions, 'size'> = {}): string {
   const ref = `ch${fnv1a(charge)}`;
   const dims = size ? ` width="${size}" height="${size}"` : '';
-  const ctx: Context = { id: ref, defs: [] };
+  const ctx: Context = { id: ref, defs: [], hex: TINCTURE_HEX, flat: false };
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 108 108"${dims}>` +
     `<defs>${chargeDef(charge, ref)}</defs>${chargeLayer({ charge, tincture, at: [{ x: 50, y: 50, size: 100 }] }, ref, ctx)}</svg>`

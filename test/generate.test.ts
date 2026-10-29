@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { test } from 'node:test';
-import { emblazon } from '../src/index.ts';
+import { emblazon, type ThemeName } from '../src/index.ts';
 import {
   CHARGES,
   COUNTERCHANGED,
@@ -41,15 +41,26 @@ test('v1 output is frozen', () => {
   }
 });
 
-test('v1 corpus of 2,000 emblems is byte-for-byte unchanged', () => {
-  const h = createHash('sha256');
-  for (let i = 0; i < 2000; i++) {
-    const e = emblazon(`corpus-${i}`, { version: 1 });
-    h.update(e.svg);
-    h.update(e.description);
-  }
-  assert.equal(h.digest('hex'), 'ac1349f373a697bd88f590220a1fb66013f8da8b960cbdb39b63fd809c01a57a');
-});
+// Every released theme version, frozen: 2,000 emblems each (default render options, so each in
+// the style it was released with), hashed. A change here means existing emblems changed.
+const FROZEN: [theme: ThemeName, version: number, sha256: string][] = [
+  ['heraldry', 1, 'ac1349f373a697bd88f590220a1fb66013f8da8b960cbdb39b63fd809c01a57a'],
+  ['heraldry', 2, 'd0302e3f70d47e4c5dab295ac1a9793daac6e7e55ae1eb2bfa78eb575c0ff2d3'],
+  ['heraldry', 3, '9f54b7f3537e02299edcfa14175868dde9116f23ee63eee8adf4dc5575cab2b5'],
+  ['patch', 1, 'dc436d74bd0b6a03709ed2b51052346cd4567e8879655696471c54c0c6cc776b'],
+];
+
+for (const [theme, version, digest] of FROZEN) {
+  test(`${theme} v${version}: corpus of 2,000 emblems is byte-for-byte unchanged`, () => {
+    const h = createHash('sha256');
+    for (let i = 0; i < 2000; i++) {
+      const e = emblazon(`corpus-${i}`, { theme, version });
+      h.update(e.svg);
+      h.update(e.description);
+    }
+    assert.equal(h.digest('hex'), digest);
+  });
+}
 
 test('same input gives the same arms; case and surrounding space do not matter', () => {
   assert.deepEqual(generateArms('Alice'), generateArms('alice'));

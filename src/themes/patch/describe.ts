@@ -7,6 +7,7 @@ const BODY_NAMES: Readonly<Record<BodyKind, string>> = {
   gasGiant: 'a gas giant',
   ringed: 'a ringed giant',
   ice: 'an ice world',
+  dune: 'a desert world',
 };
 
 function vehicleName(v: Vehicle): string {

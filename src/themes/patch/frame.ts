@@ -1,41 +1,42 @@
 import { parsePath, serializePath, transformPath } from '../../core/path.ts';
+import { n } from '../../core/svg.ts';
 import type { BorderStyle, PaletteId, PatchShape } from './types.ts';
 
 /** Patch canvas: 240×240, centred at (120,120). Shapes reach ~110 from the centre. */
 export const CANVAS = 240;
 export const CENTER = 120;
 const REACH = 110;
-/** Width of the embroidered border band. */
-export const BORDER_WIDTH = 14;
+/** Width of the band between the outer and inner rings. */
+export const BAND = 26;
 
-/** Dark thread used for every outline. */
-export const OUTLINE = '#101018';
-
+/**
+ * Flat patch colours (after jb-rpg's deep-space symbol): an accent for rings, trajectories and
+ * detail, a near-black band, a slightly lighter navy for the scene, and a light "thread".
+ */
 export interface PatchPalette {
-  /** Border band. */
-  border: string;
-  /** Light thread: stitching, stars, highlights. */
-  thread: string;
-  /** Deep sky, and the lighter glow it fades from. */
-  sky: string;
-  glow: string;
-  /** Second colour: swooshes, stage bands, fins. */
   accent: string;
+  band: string;
+  inner: string;
+  thread: string;
 }
 
 export const PALETTES: Readonly<Record<PaletteId, PatchPalette>> = {
-  nasa: { border: '#1F3F8F', thread: '#F4F4F2', sky: '#08112B', glow: '#1D3470', accent: '#C8102E' },
-  gold: { border: '#B8862B', thread: '#F6DB8B', sky: '#0B0B1E', glow: '#26244A', accent: '#2A6FDB' },
-  crimson: { border: '#A3192D', thread: '#F4E8D0', sky: '#120814', glow: '#3A1530', accent: '#F2A93B' },
-  teal: { border: '#127C7C', thread: '#E8FBFF', sky: '#04161C', glow: '#0D3B44', accent: '#FFB703' },
-  violet: { border: '#5B2A86', thread: '#F1E3FF', sky: '#0D0618', glow: '#2C1650', accent: '#2EC4B6' },
-  silver: { border: '#8A94A6', thread: '#FAFBFC', sky: '#05070D', glow: '#1B2233', accent: '#E63946' },
-  ember: { border: '#D35400', thread: '#FFF1E0', sky: '#0D0A14', glow: '#2E1A26', accent: '#3A86FF' },
-  forest: { border: '#2D6A4F', thread: '#EAF7EF', sky: '#06140F', glow: '#123528', accent: '#F4D35E' },
-  ice: { border: '#3D6E9E', thread: '#FFFFFF', sky: '#071425', glow: '#173A5E', accent: '#9FD8FF' },
-  midnight: { border: '#22223A', thread: '#FFCC33', sky: '#020208', glow: '#14142C', accent: '#FFCC33' },
-  rose: { border: '#B5446E', thread: '#FFE8F0', sky: '#110711', glow: '#36152E', accent: '#7BDFF2' },
-  copper: { border: '#9C5B32', thread: '#F7E1C8', sky: '#0E0A08', glow: '#2E1E16', accent: '#4ECDC4' },
+  amber: { accent: '#F0B060', band: '#0C111D', inner: '#141C33', thread: '#EEF1F6' },
+  cyan: { accent: '#5FD3E3', band: '#081419', inner: '#0F2430', thread: '#EAF8FB' },
+  scarlet: { accent: '#E0574B', band: '#120A0C', inner: '#211217', thread: '#F4E9E4' },
+  gold: { accent: '#D9A557', band: '#120E09', inner: '#221A11', thread: '#F3EAD7' },
+  lime: { accent: '#A9DC7E', band: '#0A1009', inner: '#142014', thread: '#EEF6E6' },
+  violet: { accent: '#B48CF2', band: '#0D0A17', inner: '#1A142E', thread: '#F1ECFB' },
+  rose: { accent: '#F28AB2', band: '#130A10', inner: '#24131F', thread: '#FBEDF3' },
+  silver: { accent: '#C9D1DC', band: '#0A0C10', inner: '#161A22', thread: '#FFFFFF' },
+  teal: { accent: '#4FC1A6', band: '#07120F', inner: '#0F231E', thread: '#E8F7F2' },
+  sun: { accent: '#F2E64A', band: '#0B0A06', inner: '#19170C', thread: '#FBF8E4' },
+  azure: { accent: '#7DA7F0', band: '#090D18', inner: '#121A30', thread: '#EDF2FC' },
+  coral: { accent: '#FF8C6B', band: '#120B09', inner: '#241612', thread: '#FCEEE9' },
+  mint: { accent: '#7FE0B0', band: '#08120E', inner: '#11241C', thread: '#EBFAF2' },
+  tangerine: { accent: '#FF9F43', band: '#120C07', inner: '#251910', thread: '#FFF1E2' },
+  periwinkle: { accent: '#9C9AF5', band: '#0B0B17', inner: '#17172E', thread: '#EFEFFD' },
+  crimson: { accent: '#D6455A', band: '#12080B', inner: '#241016', thread: '#FBE9EC' },
 };
 
 /** Outer outlines at full size; insets are exact scalings about the centre. */
@@ -44,7 +45,22 @@ const SHAPE_PATHS: Readonly<Record<PatchShape, string>> = {
   oval: 'M28 120A92 112 0 1 0 212 120A92 112 0 1 0 28 120Z',
   shield: 'M20 12H220V108C220 168 176 207 120 230C64 207 20 168 20 108Z',
   hexagon: 'M120 8L217 64V176L120 232L23 176V64Z',
+  octagon: 'M77.1 16.5H162.9L223.5 77.1V162.9L162.9 223.5H77.1L16.5 162.9V77.1Z',
+  square: 'M42 14H198Q226 14 226 42V198Q226 226 198 226H42Q14 226 14 198V42Q14 14 42 14Z',
 };
+
+/** Half-width and half-height of each shape about the centre, for placing marks in the band. */
+const EXTENT: Readonly<Record<PatchShape, readonly [number, number]>> = {
+  circle: [110, 110],
+  oval: [92, 112],
+  shield: [100, 108],
+  hexagon: [97, 112],
+  octagon: [103.5, 103.5],
+  square: [106, 106],
+};
+
+/** Shapes with a flat top edge, and where it sits: crew stars run along it in a straight row. */
+const FLAT_TOP: Readonly<Partial<Record<PatchShape, number>>> = { shield: 12, octagon: 16.5, square: 14 };
 
 const cache = new Map<string, string>();
 
@@ -60,23 +76,40 @@ export function shapePath(shape: PatchShape, inset = 0): string {
   return d;
 }
 
-/**
- * The embroidered border: the band itself, then the stitch detail along its middle.
- * The art inside is drawn separately, clipped to shapePath(shape, BORDER_WIDTH).
- */
-export function borderLayer(shape: PatchShape, style: BorderStyle, palette: PatchPalette): string {
-  const outer = shapePath(shape);
-  const mid = shapePath(shape, BORDER_WIDTH / 2);
-  const band = `<path d="${outer}" fill="${palette.border}"/>`;
+/** A point in the middle of the band at angle `a` (radians, 0 = right, −π/2 = top). */
+export function bandPoint(shape: PatchShape, a: number): [number, number] {
+  const [rx, ry] = EXTENT[shape];
+  const k = (REACH - BAND / 2) / REACH;
+  // Flat-topped shapes: keep marks on the straight top edge rather than an ellipse.
+  const top = FLAT_TOP[shape];
+  if (top !== undefined && Math.sin(a) < -0.5) return [CENTER + Math.cos(a) * rx * k, top + BAND / 2];
+  return [CENTER + Math.cos(a) * rx * k, CENTER + Math.sin(a) * ry * k];
+}
+
+/** The frame: dark band, outer and inner rings in the accent colour, and the border's detail. */
+export function frameLayer(shape: PatchShape, style: BorderStyle, palette: PatchPalette): { under: string; over: string } {
+  const ring = (inset: number, width: number, extra = '') =>
+    `<path d="${shapePath(shape, inset)}" fill="none" stroke="${palette.accent}" stroke-width="${width}"${extra}/>`;
+  const under = `<path d="${shapePath(shape)}" fill="${palette.band}"/>`;
+  let over = ring(BAND, 2.5);
   switch (style) {
     case 'single':
-      return band;
+      over += ring(2, 4);
+      break;
     case 'double':
-      return band + `<path d="${shapePath(shape, 4)}" fill="none" stroke="${palette.thread}" stroke-width="1.6"/>` +
-        `<path d="${shapePath(shape, BORDER_WIDTH - 3.5)}" fill="none" stroke="${palette.thread}" stroke-width="1.6"/>`;
+      over += ring(2, 3) + ring(8, 1.6);
+      break;
     case 'stitched':
-      return band + `<path d="${mid}" fill="none" stroke="${palette.thread}" stroke-width="2.4" stroke-dasharray="5 3.5" stroke-linecap="round"/>`;
+      over += ring(2, 3.5, ' stroke-dasharray="7 4.5" stroke-linecap="round"');
+      break;
     case 'beaded':
-      return band + `<path d="${mid}" fill="none" stroke="${palette.thread}" stroke-width="4.2" stroke-dasharray="0.01 7.5" stroke-linecap="round"/>`;
+      over += ring(2, 3) + ring(9, 3.4, ` stroke-dasharray="0.01 8" stroke-linecap="round"`);
+      break;
   }
+  // Two small separator dots at the band's sides, as on stitched mission patches.
+  for (const a of [Math.PI, 0]) {
+    const [x, y] = bandPoint(shape, a);
+    over += `<circle cx="${n(x)}" cy="${n(y)}" r="2.4" fill="${palette.accent}"/>`;
+  }
+  return { under, over };
 }

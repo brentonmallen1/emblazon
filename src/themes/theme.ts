@@ -15,4 +15,6 @@ export interface Theme<Config> {
   motif(config: Config): string | undefined;
   /** License credits for third-party art in this config. */
   credits(config: Config): string[];
+  /** The look a version was released with; renders default to it so pinned versions never change. */
+  styleFor(version: number): 'flat' | 'classic';
 }

@@ -20,10 +20,14 @@ import {
 } from './tinctures.ts';
 import { WEIGHTS_V1, WEIGHTS_V2, type HeraldryWeights } from './weights.ts';
 
-export const HERALDRY_VERSION = 2;
-export const HERALDRY_VERSIONS: readonly number[] = [1, 2];
+export const HERALDRY_VERSION = 3;
+export const HERALDRY_VERSIONS: readonly number[] = [1, 2, 3];
 
-const WEIGHTS: Readonly<Record<number, HeraldryWeights>> = { 1: WEIGHTS_V1, 2: WEIGHTS_V2 };
+/** v3 generates by v2's rules; what changed is its default look (see heraldryStyle). */
+const WEIGHTS: Readonly<Record<number, HeraldryWeights>> = { 1: WEIGHTS_V1, 2: WEIGHTS_V2, 3: WEIGHTS_V2 };
+
+/** The look each version was released with: v1–v2 classic (bright, shaded), v3+ flat. */
+export const heraldryStyle = (version: number): 'flat' | 'classic' => (version >= 3 ? 'flat' : 'classic');
 
 /** Tall charges get a little extra size so they read as tall rather than thin. */
 const TALL_BOOST = 1.12;

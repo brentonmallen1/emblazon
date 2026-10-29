@@ -20,7 +20,7 @@ createServer((req, res) => {
   const { pathname, searchParams } = url;
 
   if (pathname === '/') return send(res, 200, 'text/html; charset=utf-8', playground());
-  if (pathname === '/sheet/heraldry') return send(res, 200, 'text/html; charset=utf-8', heraldrySheet());
+  if (pathname === '/sheet/heraldry') return send(res, 200, 'text/html; charset=utf-8', heraldrySheet(searchParams.get('style') === 'classic' ? 'classic' : 'flat'));
   if (pathname === '/sheet/patch') return send(res, 200, 'text/html; charset=utf-8', patchSheet());
 
   if (pathname === '/picker') return send(res, 200, 'text/html; charset=utf-8', picker());

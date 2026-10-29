@@ -26,16 +26,21 @@ import {
 import { emblazonOptions } from '../index.ts';
 import { cell, matrix, page, row, section, tile } from './layout.ts';
 
+/** Which look the sheet draws in; set per request. */
+let sheetStyle: 'flat' | 'classic' = 'flat';
+const draw = (arms: Arms, opts: { size?: number; backdrop?: 'dark'; rim?: string } = {}) => renderArms(arms, { style: sheetStyle, ...opts });
+
 /** Contact sheet: every procedural option, at a glance and at avatar sizes. */
-export function heraldrySheet(): string {
+export function heraldrySheet(style: 'flat' | 'classic' = 'flat'): string {
+  sheetStyle = style;
   return page(
     'emblazon · heraldry',
-    'Contact sheet: every procedural option and charge, then generated emblems at avatar size.',
+    `Contact sheet (${style} style; switch with ?style=${style === 'flat' ? 'classic' : 'flat'}): every procedural option and charge, then generated emblems.`,
     [
       section('Tinctures', row(TINCTURES.map((t) => swatch(t)))),
-      section('Shields', row(SHIELDS.map((s) => tile(renderArms({ shield: s, field: { kind: 'plain', tincture: 'azure' } }), label(s))))),
+      section('Shields', row(SHIELDS.map((s) => tile(draw({ shield: s, field: { kind: 'plain', tincture: 'azure' } }), label(s))))),
       section('Partitions × lines', partitionMatrix()),
-      section('Variations', row(VARIATIONS.map((v, i) => tile(renderArms({ shield: 'heater', field: { kind: 'variation', variation: v, tinctures: PAIRS[i] } }), label(v))))),
+      section('Variations', row(VARIATIONS.map((v, i) => tile(draw({ shield: 'heater', field: { kind: 'variation', variation: v, tinctures: PAIRS[i] } }), label(v))))),
       section('Ordinaries × lines', ordinaryMatrix()),
       section('Furs (v2)', furRow()),
       section('Counterchanging (v2)', counterchangeRow()),
@@ -63,7 +68,7 @@ function backdropRows(): string {
   const picks = emblazonOptions('sheet:backdrops', { count: 3 });
   const rows = JB_RPG_THEMES.map(([name, background, accent]) => {
     const variant = (label: string, opts: object) =>
-      `<div class="bd-group"><span>${label}</span>${picks.map((e) => renderArms(e.config, { size: 64, ...opts })).join('')}</div>`;
+      `<div class="bd-group"><span>${label}</span>${picks.map((e) => draw(e.config, { size: 64, ...opts })).join('')}</div>`;
     return (
       `<div class="bd-row" style="background:${background}"><span class="bd-name" style="color:${accent}">${name}</span>` +
       variant('no rim', {}) +
@@ -89,7 +94,7 @@ function furRow(): string {
     { shield: 'heater', field: { kind: 'plain', tincture: 'azure' }, ordinary: { kind: 'chevron', line: 'straight', tincture: 'erminois' } },
     { shield: 'heater', field: { kind: 'plain', tincture: 'gules' }, ordinary: { kind: 'bend', line: 'wavy', tincture: 'vair' } },
   ];
-  return row([...asField, ...onField].map((arms) => tile(renderArms(arms), blazon(arms))));
+  return row([...asField, ...onField].map((arms) => tile(draw(arms), blazon(arms))));
 }
 
 /** Ordinaries and charges that swap tinctures across the partition line. */
@@ -102,7 +107,7 @@ function counterchangeRow(): string {
     { shield: 'heater', field: { kind: 'partition', partition: 'perFess', line: 'wavy', tinctures: ['azure', 'argent'] }, charges: { charge: 'octopus', tincture: cc, at: ONE } },
     { shield: 'spanish', field: { kind: 'partition', partition: 'gyronny', line: 'straight', tinctures: ['vert', 'or'] }, ordinary: { kind: 'bordure', line: 'straight', tincture: cc } },
   ];
-  return row(examples.map((arms) => tile(renderArms(arms), blazon(arms))));
+  return row(examples.map((arms) => tile(draw(arms), blazon(arms))));
 }
 
 /** Metal/colour pairs, rotated through so the sheet isn't one colourway. */
@@ -124,7 +129,7 @@ function partitionMatrix(): string {
       `<div class="rowlabel">${label(partition)}</div>`,
       ...LINE_STYLES.map((line) =>
         lined || line === 'straight'
-          ? cell(renderArms({ shield: 'heater', field: { kind: 'partition', partition, line, tinctures: PAIRS[i % PAIRS.length] } }, { size: 88 }))
+          ? cell(draw({ shield: 'heater', field: { kind: 'partition', partition, line, tinctures: PAIRS[i % PAIRS.length] } }, { size: 88 }))
           : '<div></div>',
       ),
     ].join('');
@@ -142,7 +147,7 @@ function ordinaryMatrix(): string {
       `<div class="rowlabel">${label(kind)}</div>`,
       ...LINE_STYLES.map((line) =>
         lined || line === 'straight'
-          ? cell(renderArms({ shield: 'heater', field: { kind: 'plain', tincture: fieldT }, ordinary: { kind, line, tincture: ordT } }, { size: 88 }))
+          ? cell(draw({ shield: 'heater', field: { kind: 'plain', tincture: fieldT }, ordinary: { kind, line, tincture: ordT } }, { size: 88 }))
           : '<div></div>',
       ),
     ].join('');
@@ -164,7 +169,7 @@ function chargeMatrix(): string {
     const [metal, color] = PAIRS[i % PAIRS.length];
     const [fieldT, chargeT] = i % 2 === 0 ? [color, metal] : [metal, color];
     const onShield = (at: readonly ChargePlacement[], size: number) =>
-      cell(renderArms({ shield: 'heater', field: { kind: 'plain', tincture: fieldT }, charges: { charge, tincture: chargeT, at } }, { size }));
+      cell(draw({ shield: 'heater', field: { kind: 'plain', tincture: fieldT }, charges: { charge, tincture: chargeT, at } }, { size }));
     return [
       `<div class="rowlabel">${CHARGES[charge].name}</div>`,
       ...TINCTURES.map((t) => cell(renderCharge(charge, t, { size: 40 }))),
@@ -186,7 +191,7 @@ function sizeRows(): string {
   ];
   const sizes = [32, 48, 64, 96, 128];
   return examples
-    .map((arms) => `<div class="sizes">${sizes.map((s) => tile(renderArms(arms, { size: s }), `${s}px`)).join('')}</div>`)
+    .map((arms) => `<div class="sizes">${sizes.map((s) => tile(draw(arms, { size: s }), `${s}px`)).join('')}</div>`)
     .join('');
 }
 
@@ -195,7 +200,7 @@ function generatedGrid(count: number): string {
   const tiles = Array.from({ length: count }, (_, i) => {
     const input = `user${i}`;
     const arms = generateArms(input);
-    return `<figure title="${escapeXml(`${input}: ${blazon(arms)}`)}">${renderArms(arms, { size: 56 })}<figcaption>${input}</figcaption></figure>`;
+    return `<figure title="${escapeXml(`${input}: ${blazon(arms)}`)}">${draw(arms, { size: 56 })}<figcaption>${input}</figcaption></figure>`;
   });
   return `<p class="note">heraldry v${HERALDRY_VERSION} at 56px. Hover for the blazon; open <a href="/">Try it</a> for any input. Charges marked · are adapted from game-icons.net (CC BY 3.0, see assets/CREDITS.md).</p><div class="grid">${tiles.join('')}</div>`;
 }

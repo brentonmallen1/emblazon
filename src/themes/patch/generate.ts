@@ -7,11 +7,11 @@ export const PATCH_VERSIONS: readonly number[] = [1];
 
 /** Pick weights for patch v1. Frozen once released, like heraldry's. Key order matters. */
 const W1 = {
-  shapes: { circle: 3, oval: 2, shield: 2, hexagon: 2 } satisfies Record<PatchShape, number>,
+  shapes: { circle: 3, oval: 2, shield: 2, hexagon: 2, octagon: 2, square: 1 } satisfies Record<PatchShape, number>,
   borders: { single: 2, double: 2, stitched: 3, beaded: 1 } satisfies Record<BorderStyle, number>,
-  palettes: { nasa: 1, gold: 1, crimson: 1, teal: 1, violet: 1, silver: 1, ember: 1, forest: 1, ice: 1, midnight: 1, rose: 1, copper: 1 } satisfies Record<PaletteId, number>,
+  palettes: { amber: 1, cyan: 1, scarlet: 1, gold: 1, lime: 1, violet: 1, rose: 1, silver: 1, teal: 1, sun: 1, azure: 1, coral: 1, mint: 1, tangerine: 1, periwinkle: 1, crimson: 1 } satisfies Record<PaletteId, number>,
   bodyChance: 0.8,
-  bodies: { earth: 3, moon: 3, mars: 2, gasGiant: 2, ringed: 2, ice: 1 } satisfies Record<BodyKind, number>,
+  bodies: { earth: 3, moon: 3, mars: 2, gasGiant: 2, ringed: 2, ice: 1, dune: 2 } satisfies Record<BodyKind, number>,
   placements: { horizon: 3, left: 1, right: 1 } satisfies Record<BodyPlacement, number>,
   vehicles: { rocket: 3, capsule: 2, lander: 1.5, rover: 1.5, satellite: 2, probe: 2 } satisfies Record<VehicleKind, number>,
   trajectories: { none: 2, swoosh: 2, orbit: 2 },
@@ -39,7 +39,7 @@ export function generatePatch(input: string, version: number = PATCH_VERSION): P
   const palette = weighted(slot('palette'), w.palettes);
 
   const skyRng = slot('sky');
-  const sky = { seed: seed(skyRng), stars: int(skyRng, 26, 60), nebula: chance(skyRng, 0.45) };
+  const sky = { seed: seed(skyRng), stars: int(skyRng, 12, 26) };
 
   const bodyRng = slot('body');
   const body = chance(bodyRng, w.bodyChance)
@@ -48,7 +48,7 @@ export function generatePatch(input: string, version: number = PATCH_VERSION): P
 
   // Landers and rovers stand on a surface: only on a Moon or Mars horizon, upright, no trajectory.
   const vRng = slot('vehicle');
-  const canLand = body?.placement === 'horizon' && (body.kind === 'moon' || body.kind === 'mars');
+  const canLand = body?.placement === 'horizon' && (body.kind === 'moon' || body.kind === 'mars' || body.kind === 'dune');
   const kind = weighted(vRng, canLand ? w.vehicles : { ...w.vehicles, lander: 0, rover: 0 });
   const vehicle = makeVehicle(vRng, kind);
   const grounded = SURFACE_CRAFT.includes(kind);

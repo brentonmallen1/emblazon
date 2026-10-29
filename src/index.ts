@@ -26,6 +26,7 @@ export const THEMES: { readonly [T in ThemeName]: Theme<Configs[T]> } = {
     lookKey: heraldryTheme.lookKey,
     motif: (arms) => arms.charges?.charge,
     credits: heraldryTheme.creditsFor,
+    styleFor: heraldryTheme.heraldryStyle,
   },
   patch: {
     versions: patchTheme.PATCH_VERSIONS,
@@ -36,6 +37,7 @@ export const THEMES: { readonly [T in ThemeName]: Theme<Configs[T]> } = {
     lookKey: patchTheme.patchLookKey,
     motif: patchTheme.patchMotif,
     credits: () => [],
+    styleFor: () => 'flat',
   },
 };
 
@@ -107,5 +109,6 @@ export function emblazonOptions<T extends ThemeName = 'heraldry'>(
 }
 
 function build<T extends ThemeName>(theme: T, t: Theme<Configs[T]>, input: string, config: Configs[T], version: number, render: RenderOptions): Emblem<T> {
-  return { theme, version, input, svg: t.render(config, render), config, description: t.describe(config), credits: t.credits(config) } as Emblem<T>;
+  const svg = t.render(config, { style: t.styleFor(version), ...render });
+  return { theme, version, input, svg, config, description: t.describe(config), credits: t.credits(config) } as Emblem<T>;
 }

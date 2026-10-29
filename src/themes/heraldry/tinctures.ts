@@ -17,6 +17,23 @@ export const TINCTURE_HEX: Readonly<Record<Tincture, string>> = {
   purpure: '#7B3F8F',
 };
 
+/**
+ * The flat style's tinctures: muted and earthy, to sit on dark screens (after jb-rpg's fantasy
+ * symbol). Same heraldic meaning, different paint.
+ */
+export const FLAT_TINCTURE_HEX: Readonly<Record<Tincture, string>> = {
+  or: '#D4A15F',
+  argent: '#EFE4C8',
+  gules: '#7E2F22',
+  azure: '#2E4A70',
+  vert: '#3E6B47',
+  sable: '#221C18',
+  purpure: '#5E3A63',
+};
+
+/** The flat style's shield edge: a cream rim instead of a dark outline. */
+export const FLAT_EDGE = '#EFE4C8';
+
 /** Outline drawn around every division, ordinary, charge and the shield itself. */
 export const OUTLINE = '#17161B';
 
