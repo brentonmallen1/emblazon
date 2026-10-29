@@ -7,7 +7,8 @@ Deterministic, themed avatar generator in the spirit of Robohash. Any input stri
 username, UUID) always produces the same emblem. Themes are **coats of arms** first, **mission
 patches** second, more later.
 
-Status: **Phase 2 done** (20 charges, asset compiler, charge rendering; preview sheet at `npm run dev`). Next: Phase 3.
+Status: **Phase 3 done** — `heraldry@1` generates, renders and blazons; playground and
+contact sheet at `npm run dev`. Next: Phase 4.
 
 ---
 
@@ -84,6 +85,9 @@ output is added (Phase 6).
 | `GET /{theme}/{input}.svg?size=&v=` | the emblem |
 | `GET /{theme}/{input}.json?v=` | config + description |
 | `GET /sheet/{theme}` | contact sheet: random emblems, every asset, every procedural option |
+| `GET /` | playground: type any input, see the emblem, blazon and config |
+
+Responses with a pinned `?v=` are cached as immutable; unpinned ones for an hour.
 
 ---
 
@@ -156,8 +160,8 @@ Each entry: positions (field coords), charge size, and which surface the charges
 
 | Ordinary | Options |
 |---|---|
-| none | 1 large at fess point · 3 in 2-1 · 2 in pale · 3 in pale · 4 (2-2) · 5 in saltire |
-| chief | 3 *on* the chief · 1 large in base (on field) · both |
+| none | 1 large at fess point · 3 in 2-1 · 2 in pale · 3 in pale (4-in-2-2 and 5-in-saltire dropped: they clip on the norman shield) |
+| chief | 3 *on* the chief · 1 large in base (on field) |
 | fess | 3 *on* the fess · 3 *between* (2 above, 1 below) |
 | pale | 3 *on* the pale · 2 *between* (flanking) |
 | bend / bend sinister | 3 *on* the bend · 2 *between* |
@@ -165,16 +169,24 @@ Each entry: positions (field coords), charge size, and which surface the charges
 | cross / saltire | 1 *on* at center · 4 *between* (in the angles) |
 | pile | 1 *on* near chief · 2 *between* (flanking base) |
 | bordure | same as none, scaled to 80% |
-| *(no charges)* | allowed for every ordinary, weighted lower, so plain geometric arms exist |
+| *(no charges)* | allowed for every ordinary, weighted low (0.6), so plain geometric arms exist without crowding the space |
 
-### 3.4 Rules (enforced in generate(), tested over 10k seeds)
+Implemented in `src/themes/heraldry/placements.ts`; positions are resolved into the config, so
+the renderer never needs the table.
+
+### 3.4 Rules (enforced in generate(), tested over 10k inputs in `test/generate.test.ts`)
 - **Rule of tincture:** metal never on metal, color never on color.
   - Plain field: ordinary and charges on the field take the opposite class.
   - Partition/variation: one metal + one color; anything on top must differ from both.
   - Charges *on* an ordinary take the class opposite to the ordinary.
-- Charges *on* a narrow ordinary only use charges tagged `compact` (no swords on a bend).
-- Patterned fields (chequy, lozengy) take no small charges on the field — legibility.
-- Every weight lives in one table per version so tuning is a data change.
+- Charges *on* an ordinary only use charges tagged `compact` (no swords on a bend).
+- Patterned fields take no charges directly, and always get an ordinary (a bare pattern is
+  drawn from too few combinations to stay distinct).
+- An ordinary never sits on the matching partition line (per bend + bend, quarterly + cross…).
+- At most one non-straight line per shield.
+- `tall` charges are drawn 12% larger.
+- Every weight lives in one table per version (`weights.ts`, `placements.ts`), so tuning is a
+  data change — and once a version ships, tuning means a new version.
 
 ### 3.5 Blazon
 `describe()` produces real blazon text, e.g.
@@ -186,9 +198,18 @@ Each entry: positions (field coords), charge size, and which surface the charges
 5 shields × 14 fields × ~5 line styles (where applicable) × 11 ordinaries × ~3 placements
 × 20 charges × ~40 valid tincture sets ≈ **tens of millions raw**.
 
-Salient-feature space (what you notice at 48px: field tinctures × field type × ordinary ×
-charge) ≈ 40 × 14 × 11 × 20 ≈ **120k**. Target met. `scripts/stats.ts` measures the actual
-collision rate of the salient tuple over N random inputs instead of trusting this math.
+The estimate above assumed uniform picks; real weights concentrate output, so we measure
+instead. `npm run stats` generates 10k inputs and treats two emblems as lookalikes when they
+share field type and tinctures, ordinary and its tincture, and charge and its tincture
+(ignoring shield, line style and count, so it errs toward "alike").
+
+**Target:** the chance that two random inputs look alike is below 1 in 10,000.
+(The earlier "< 1% collisions" target was wrong: by the birthday effect, any realistic space
+gives many lookalike pairs among 10k users; the per-pair probability is the meaningful number.)
+
+**v1 measured:** 1 in ~18,000 per pair; 97.9% of full configs distinct. First attempt was
+1 in ~1,950 with 8% exact duplicates — too many charge-less arms and bare patterned fields;
+fixed by re-weighting before release.
 
 ---
 

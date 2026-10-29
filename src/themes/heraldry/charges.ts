@@ -29,4 +29,8 @@ export interface Charges {
   charge: ChargeId;
   tincture: Tincture;
   at: readonly ChargePlacement[];
+  /** True when the charges sit on the ordinary rather than the field. */
+  on?: boolean;
+  /** Blazon hint for arrangements the count alone doesn't imply. */
+  arrangement?: 'inPale';
 }
