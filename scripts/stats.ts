@@ -3,11 +3,12 @@
  * "Salient" = what you notice at avatar size: field type and tinctures, the ordinary and its
  * tincture, the charge and its tincture. Shield shape, line style and charge count are ignored,
  * so this errs toward calling two emblems lookalikes.
- * Usage: npm run stats [-- count]
+ * Usage: npm run stats [-- count [version]]
  */
-import { generateArms, type Arms } from '../src/themes/heraldry/index.ts';
+import { HERALDRY_VERSION, generateArms, type Arms } from '../src/themes/heraldry/index.ts';
 
 const N = Number(process.argv[2] ?? 10_000);
+const VERSION = Number(process.argv[3] ?? HERALDRY_VERSION);
 
 function salientKey({ field, ordinary, charges }: Arms): string {
   const f =
@@ -23,7 +24,7 @@ const full = new Map<string, number>();
 const breakdown = { field: new Map<string, number>(), ordinary: new Map<string, number>(), charges: new Map<string, number>() };
 
 for (let i = 0; i < N; i++) {
-  const arms = generateArms(`user${i}@example.com`);
+  const arms = generateArms(`user${i}@example.com`, VERSION);
   tally(salient, salientKey(arms));
   tally(full, JSON.stringify(arms));
   tally(breakdown.field, arms.field.kind);
@@ -44,7 +45,7 @@ const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
 const top = (map: Map<string, number>, k = 12) =>
   [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, k).map(([key, c]) => `  ${pct(c / N).padStart(6)}  ${key}`).join('\n');
 
-console.log(`heraldry v1 · ${N.toLocaleString()} inputs
+console.log(`heraldry v${VERSION} · ${N.toLocaleString()} inputs
 
 distinct emblems (full config)    ${full.size.toLocaleString()}  (${pct(full.size / N)})
 distinct salient looks            ${salient.size.toLocaleString()}

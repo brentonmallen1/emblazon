@@ -1,3 +1,4 @@
+import { HERALDRY_VERSION, HERALDRY_VERSIONS } from '../themes/heraldry/index.ts';
 import { page } from './layout.ts';
 
 /** Type anything, see its arms. Talks to the same /heraldry routes an app would use. */
@@ -20,6 +21,9 @@ export function playground(): string {
     <label for="input" class="note">Any string: a username, email or UUID</label>
     <input id="input" value="brenton" autocomplete="off" spellcheck="false">
     <button id="random" type="button">Random</button>
+    <label class="note" style="margin-left: 12px">Version
+      <select id="version">${HERALDRY_VERSIONS.map((v) => `<option value="${v}"${v === HERALDRY_VERSION ? ' selected' : ''}>v${v}</option>`).join('')}</select>
+    </label>
     <p class="blazon" id="blazon"></p>
     <div class="sizes" id="sizes"></div>
     <details><summary>Config JSON</summary><pre id="json"></pre></details>
@@ -31,14 +35,16 @@ const $ = (id) => document.getElementById(id);
 let timer;
 async function show(value) {
   const key = encodeURIComponent(value || ' ');
-  $('big').src = '/heraldry/' + key + '.svg';
-  $('sizes').innerHTML = [32, 48, 64, 96].map((s) => '<img width="' + s + '" height="' + s + '" src="/heraldry/' + key + '.svg?size=' + s + '" alt="">').join('');
-  const res = await fetch('/heraldry/' + key + '.json');
+  const v = '?v=' + $('version').value;
+  $('big').src = '/heraldry/' + key + '.svg' + v;
+  $('sizes').innerHTML = [32, 48, 64, 96].map((s) => '<img width="' + s + '" height="' + s + '" src="/heraldry/' + key + '.svg' + v + '&size=' + s + '" alt="">').join('');
+  const res = await fetch('/heraldry/' + key + '.json' + v);
   const data = await res.json();
   $('blazon').textContent = data.description;
   $('json').textContent = JSON.stringify(data.config, null, 2);
 }
 $('input').addEventListener('input', (e) => { clearTimeout(timer); timer = setTimeout(() => show(e.target.value), 120); });
+$('version').addEventListener('change', () => show($('input').value));
 $('random').addEventListener('click', () => { const v = Math.random().toString(36).slice(2, 10); $('input').value = v; show(v); });
 show($('input').value);`;
 

@@ -1,7 +1,7 @@
 import { L, M, n, type Pt } from '../../core/svg.ts';
 import { BOTTOM, FESS, FIELD_H, FIELD_W, LEFT, RIGHT, TOP } from './geometry.ts';
 import { edge, type LineStyle } from './lines.ts';
-import type { Tincture } from './tinctures.ts';
+import type { Paint, Tincture } from './tinctures.ts';
 
 export const PARTITIONS = [
   'perPale',
@@ -22,7 +22,7 @@ export const VARIATIONS = ['paly', 'barry', 'bendy', 'chequy', 'lozengy'] as con
 export type Variation = (typeof VARIATIONS)[number];
 
 export type Field =
-  | { kind: 'plain'; tincture: Tincture }
+  | { kind: 'plain'; tincture: Paint }
   | { kind: 'partition'; partition: Partition; line: LineStyle; tinctures: readonly [Tincture, Tincture] }
   | { kind: 'variation'; variation: Variation; tinctures: readonly [Tincture, Tincture] };
 

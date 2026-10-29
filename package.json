@@ -12,6 +12,7 @@
     "start": "node server.ts",
     "sheet": "node scripts/sheet.ts",
     "draw": "node scripts/draw-geometric.ts",
+    "import-icons": "node scripts/import-game-icons.ts",
     "assets": "node scripts/build-assets.ts",
     "stats": "node scripts/stats.ts",
     "test": "node --test \"test/**/*.test.ts\""

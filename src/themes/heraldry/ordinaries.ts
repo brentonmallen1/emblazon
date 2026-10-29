@@ -1,7 +1,7 @@
 import { L, M, type Pt } from '../../core/svg.ts';
 import { BOTTOM, FESS, LEFT, RIGHT, TOP } from './geometry.ts';
 import { edge, type LineStyle } from './lines.ts';
-import type { Tincture } from './tinctures.ts';
+import type { Counterchanged, Paint } from './tinctures.ts';
 
 export const ORDINARIES = [
   'chief',
@@ -26,7 +26,7 @@ export const LINED_ORDINARIES: readonly OrdinaryKind[] = ORDINARIES.filter((o) =
 export interface Ordinary {
   kind: OrdinaryKind;
   line: LineStyle;
-  tincture: Tincture;
+  tincture: Paint | Counterchanged;
 }
 
 /** Visible width of the bordure inside the shield edge. */

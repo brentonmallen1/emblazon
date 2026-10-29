@@ -2,7 +2,7 @@ import type { Arms } from './arms.ts';
 import { CHARGES, type Charges } from './charges.ts';
 import type { Field, Partition } from './fields.ts';
 import type { Ordinary, OrdinaryKind } from './ordinaries.ts';
-import { tinctureName, type Tincture } from './tinctures.ts';
+import { COUNTERCHANGED, tinctureName, type Tincture } from './tinctures.ts';
 
 const PARTITION_NAMES: Readonly<Record<Partition, string>> = {
   perPale: 'per pale',
@@ -76,7 +76,8 @@ function describeOrdinary({ kind, line, tincture }: Ordinary, withTincture = tru
 
 function describeCharges({ charge, tincture, at, arrangement }: Charges, withTincture = true): string {
   const count = at.length;
-  const roundel = charge === 'roundel';
+  // Roundels are named by tincture, so a counterchanged one keeps the generic name.
+  const roundel = charge === 'roundel' && tincture !== COUNTERCHANGED;
   const [one, many] = roundel ? ROUNDELS[tincture] : [CHARGES[charge].name, CHARGES[charge].plural];
   const noun = count === 1 ? one : many;
   const article = count === 1 ? (/^[aeiou]/i.test(noun) ? 'an' : 'a') : COUNTS[count];

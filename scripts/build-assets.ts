@@ -5,6 +5,8 @@
  */
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
+import { n } from '../src/core/svg.ts';
+import { parsePath, pathBounds } from './lib/path.ts';
 
 export const SRC_DIR = 'assets/heraldry/charges';
 export const OUT_FILE = 'src/themes/heraldry/charges.generated.ts';
@@ -19,6 +21,8 @@ const ALLOWED: Readonly<Record<string, readonly string[]>> = {
   g: ['fill-rule'],
 };
 const ROOT_ATTRS = ['xmlns', 'viewBox', 'data-id', 'data-name', 'data-plural', 'data-weight', 'data-tags'];
+/** Required for third-party art: who to credit, carried into the compiled charge. */
+const OPTIONAL_ROOT_ATTRS = ['data-credit'];
 
 export interface CompiledAsset {
   id: string;
@@ -27,7 +31,11 @@ export interface CompiledAsset {
   weight: number;
   tags: string[];
   markup: string;
+  credit?: string;
 }
+
+const unescapeXml = (s: string): string =>
+  s.replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#39;/g, "'").replace(/&amp;/g, '&');
 
 const attrsOf = (text: string): Record<string, string> =>
   Object.fromEntries([...text.matchAll(/([\w:-]+)="([^"]*)"/g)].map((m) => [m[1], m[2]]));
@@ -40,7 +48,8 @@ export function compileAsset(file: string, source: string): { asset?: CompiledAs
   if (!root) return { errors: [`${file}: must contain exactly one <svg> root element`] };
 
   const meta = attrsOf(root[1]);
-  for (const key of Object.keys(meta)) if (!ROOT_ATTRS.includes(key)) fail(`unexpected root attribute "${key}"`);
+  for (const key of Object.keys(meta)) if (!ROOT_ATTRS.includes(key) && !OPTIONAL_ROOT_ATTRS.includes(key)) fail(`unexpected root attribute "${key}"`);
+  if (/game-icons/i.test(source) && !meta['data-credit']) fail('adapted third-party art needs a data-credit attribute');
   for (const key of ROOT_ATTRS) if (!(key in meta)) fail(`missing root attribute "${key}"`);
   if (meta.viewBox !== '0 0 100 100') fail(`viewBox must be "0 0 100 100", got "${meta.viewBox}"`);
   if (meta['data-id'] !== basename(file, '.svg')) fail(`data-id "${meta['data-id']}" must match the file name`);
@@ -60,9 +69,19 @@ export function compileAsset(file: string, source: string): { asset?: CompiledAs
     if (tag !== 'g') shapes++;
     for (const [key, value] of Object.entries(attrsOf(attrText))) {
       if (!ALLOWED[tag].includes(key)) fail(`<${tag} ${key}> is not allowed; colour, stroke and transforms come from the renderer`);
-      for (const [num] of value.matchAll(/-?\d*\.?\d+(?:e-?\d+)?/gi)) {
-        const x = Number(num);
-        if (!Number.isFinite(x) || x < -0.5 || x > 100.5) fail(`<${tag} ${key}> value ${num} lies outside the 100×100 viewBox`);
+      // Path data: check real coordinates only (arc radii may legitimately exceed the box).
+      let values: number[];
+      if (key === 'd') {
+        try {
+          const b = pathBounds(parsePath(value));
+          values = [b.minX, b.minY, b.maxX, b.maxY];
+        } catch (e) {
+          fail(`<path d> does not parse: ${(e as Error).message}`);
+          continue;
+        }
+      } else values = [...value.matchAll(/-?\d*\.?\d+(?:e-?\d+)?/gi)].map((m) => Number(m[0]));
+      for (const x of values) {
+        if (!Number.isFinite(x) || x < -0.5 || x > 100.5) fail(`<${tag} ${key}> value ${n(x)} lies outside the 100×100 viewBox`);
       }
     }
   }
@@ -78,6 +97,7 @@ export function compileAsset(file: string, source: string): { asset?: CompiledAs
       weight,
       tags: meta['data-tags'].split(',').map((t) => t.trim()).filter(Boolean),
       markup: body.replace(/>\s+</g, '><').trim(),
+      ...(meta['data-credit'] && { credit: unescapeXml(meta['data-credit']) }),
     },
   };
 }

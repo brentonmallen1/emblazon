@@ -1,5 +1,5 @@
 import { CHARGES } from './charges.generated.ts';
-import type { Tincture } from './tinctures.ts';
+import type { Counterchanged, Tincture } from './tinctures.ts';
 
 export { CHARGES };
 
@@ -12,6 +12,8 @@ export interface ChargeDef {
   tags: readonly string[];
   /** Inner SVG markup in a 100×100 box, with no colours of its own. */
   markup: string;
+  /** Attribution required by the art's license, for adapted third-party art. */
+  credit?: string;
 }
 
 export type ChargeId = keyof typeof CHARGES;
@@ -27,7 +29,7 @@ export interface ChargePlacement {
 /** One or more identical charges in one tincture. Placement is resolved by the generator. */
 export interface Charges {
   charge: ChargeId;
-  tincture: Tincture;
+  tincture: Tincture | Counterchanged;
   at: readonly ChargePlacement[];
   /** True when the charges sit on the ordinary rather than the field. */
   on?: boolean;

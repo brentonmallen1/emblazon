@@ -1,25 +1,37 @@
 import { normalizeInput } from '../../core/hash.ts';
 import { chance, rngFor, weighted, type Rng } from '../../core/rng.ts';
 import type { Arms } from './arms.ts';
-import { CHARGE_IDS, CHARGES, type ChargeId, type Charges } from './charges.ts';
+import { CHARGES, type ChargeId, type Charges } from './charges.ts';
 import { LINED_PARTITIONS, type Field, type Partition } from './fields.ts';
 import type { LineStyle } from './lines.ts';
 import { LINED_ORDINARIES, type Ordinary, type OrdinaryKind } from './ordinaries.ts';
 import { PLACEMENTS, round2 } from './placements.ts';
-import { COLORS, METALS, TINCTURES, isMetal, type Tincture } from './tinctures.ts';
-import { WEIGHTS_V1, type HeraldryWeights } from './weights.ts';
+import {
+  COLORS,
+  COUNTERCHANGED,
+  FUR_CONTRASTS,
+  METALS,
+  TINCTURES,
+  contrastsWith,
+  isFur,
+  type Fur,
+  type Paint,
+  type Tincture,
+} from './tinctures.ts';
+import { WEIGHTS_V1, WEIGHTS_V2, type HeraldryWeights } from './weights.ts';
 
-export const HERALDRY_VERSION = 1;
-export const HERALDRY_VERSIONS: readonly number[] = [1];
+export const HERALDRY_VERSION = 2;
+export const HERALDRY_VERSIONS: readonly number[] = [1, 2];
 
-const WEIGHTS: Readonly<Record<number, HeraldryWeights>> = { 1: WEIGHTS_V1 };
+const WEIGHTS: Readonly<Record<number, HeraldryWeights>> = { 1: WEIGHTS_V1, 2: WEIGHTS_V2 };
 
 /** Tall charges get a little extra size so they read as tall rather than thin. */
 const TALL_BOOST = 1.12;
 
 /**
  * Pure and deterministic: the same input and version always give the same arms.
- * Each slot draws from its own seeded stream, so adding a slot never disturbs the others.
+ * Each slot draws from its own seeded stream, so adding a slot never disturbs the others, and a
+ * feature a version doesn't use draws nothing.
  */
 export function generateArms(input: string, version: number = HERALDRY_VERSION): Arms {
   const w = WEIGHTS[version];
@@ -29,17 +41,25 @@ export function generateArms(input: string, version: number = HERALDRY_VERSION):
 
   const shield = weighted(slot('shield'), w.shields);
   const field = generateField(slot('field'), w);
-  const ordinary = generateOrdinary(slot('ordinary'), w, field);
-  const charges = generateCharges(slot('charges'), w, field, ordinary);
+  let ordinary = generateOrdinary(slot('ordinary'), w, field);
+  let charges = generateCharges(slot('charges'), w, field, ordinary);
+
+  // Counterchanging: what crosses the partition line takes the field's other tincture on each
+  // side. Not for an ordinary that carries charges (they need one tincture to contrast with).
+  if (w.counterchange > 0 && field.kind === 'partition' && chance(slot('counterchange'), w.counterchange)) {
+    if (charges && !charges.on) charges = { ...charges, tincture: COUNTERCHANGED };
+    if (ordinary && !charges?.on && !isFur(ordinary.tincture)) ordinary = { ...ordinary, tincture: COUNTERCHANGED };
+  }
+
   return { shield, field, ...(ordinary && { ordinary }), ...(charges && { charges }) };
 }
 
 function generateField(rng: Rng, w: HeraldryWeights): Field {
   const kind = weighted(rng, w.fieldKinds);
-  if (kind === 'plain') return { kind, tincture: tincture(rng, w, TINCTURES) };
+  if (kind === 'plain') return { kind, tincture: paint(rng, w, TINCTURES, w.furs) };
   // Divided fields always pair a metal with a colour.
-  const metal = tincture(rng, w, METALS);
-  const color = tincture(rng, w, COLORS);
+  const metal = paint(rng, w, METALS) as Tincture;
+  const color = paint(rng, w, COLORS) as Tincture;
   const tinctures: readonly [Tincture, Tincture] = chance(rng, 0.5) ? [metal, color] : [color, metal];
   if (kind === 'partition') {
     const partition = weighted(rng, w.partitions);
@@ -69,7 +89,14 @@ function generateOrdinary(rng: Rng, w: HeraldryWeights, field: Field): Ordinary 
   // At most one fancy line per shield: two compete and neither reads at avatar size.
   const fieldIsLined = field.kind === 'partition' && field.line !== 'straight';
   const line: LineStyle = LINED_ORDINARIES.includes(kind) && !fieldIsLined ? weighted(rng, w.lines) : 'straight';
-  return { kind, line, tincture: tincture(rng, w, contrasting(field)) };
+  // A fur ordinary must contrast with every tincture of the field; a bordure is never furred.
+  const fieldTinctures = field.kind === 'plain' ? [field.tincture] : field.tinctures;
+  const furs = Object.fromEntries(
+    Object.entries(w.ordinaryFurs).filter(
+      ([fur]) => kind !== 'bordure' && fieldTinctures.every((t) => !isFur(t) && FUR_CONTRASTS[fur as Fur].includes(t)),
+    ),
+  );
+  return { kind, line, tincture: paint(rng, w, contrasting(field), furs) };
 }
 
 function generateCharges(rng: Rng, w: HeraldryWeights, field: Field, ordinary: Ordinary | undefined): Charges | undefined {
@@ -81,12 +108,14 @@ function generateCharges(rng: Rng, w: HeraldryWeights, field: Field, ordinary: O
   if (placement.at.length === 0) return undefined;
 
   const onOrdinary = placement.surface === 'ordinary' && ordinary !== undefined;
-  // On the ordinary: opposite class to it. On the field: whatever contrasts with the field.
-  const tinctureOf = onOrdinary ? tincture(rng, w, opposite(ordinary.tincture)) : tincture(rng, w, contrasting(field));
-  // Narrow ordinaries only take compact charges.
-  const pool = onOrdinary ? CHARGE_IDS.filter((id) => CHARGES[id].tags.includes('compact')) : CHARGE_IDS;
-  const charge = weighted(rng, Object.fromEntries(pool.map((id) => [id, CHARGES[id].weight])) as Record<ChargeId, number>);
-  const boost = (CHARGES[charge].tags as readonly string[]).includes('tall') ? TALL_BOOST : 1;
+  // On the ordinary: contrast with it. On the field: whatever contrasts with the field.
+  const tinctureOf = paint(rng, w, onOrdinary ? contrastsWith(ordinary.tincture as Paint) : contrasting(field)) as Tincture;
+  // Narrow ordinaries only take compact charges, and not the ones too detailed for that size.
+  const pool = (Object.keys(w.charges) as ChargeId[]).filter(
+    (id) => !onOrdinary || (hasTag(id, 'compact') && !w.notOnOrdinaries.some((tag) => hasTag(id, tag))),
+  );
+  const charge = weighted(rng, Object.fromEntries(pool.map((id) => [id, w.charges[id]!])) as Record<ChargeId, number>);
+  const boost = hasTag(charge, 'tall') ? TALL_BOOST : 1;
 
   return {
     charge,
@@ -97,14 +126,15 @@ function generateCharges(rng: Rng, w: HeraldryWeights, field: Field, ordinary: O
   };
 }
 
-/** Rule of tincture: metal on colour, colour on metal. Divided fields: anything not already on them. */
+/** Rule of tincture (extended to furs). Divided fields: anything not already on them. */
 function contrasting(field: Field): readonly Tincture[] {
-  if (field.kind === 'plain') return opposite(field.tincture);
+  if (field.kind === 'plain') return contrastsWith(field.tincture);
   return TINCTURES.filter((t) => !field.tinctures.includes(t));
 }
 
-const opposite = (t: Tincture): readonly Tincture[] => (isMetal(t) ? COLORS : METALS);
+const hasTag = (id: ChargeId, tag: string): boolean => (CHARGES[id].tags as readonly string[]).includes(tag);
 
-function tincture(rng: Rng, w: HeraldryWeights, allowed: readonly Tincture[]): Tincture {
-  return weighted(rng, Object.fromEntries(allowed.map((t) => [t, w.tinctures[t]])) as Record<Tincture, number>);
+/** Weighted pick among allowed tinctures, plus any furs offered. With no furs, identical to v1. */
+function paint(rng: Rng, w: HeraldryWeights, allowed: readonly Tincture[], furs: Readonly<Partial<Record<Fur, number>>> = {}): Paint {
+  return weighted(rng, Object.fromEntries([...allowed.map((t) => [t, w.tinctures[t]]), ...Object.entries(furs)]) as Record<Paint, number>);
 }

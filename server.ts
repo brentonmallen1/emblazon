@@ -1,4 +1,6 @@
+import { readFileSync } from 'node:fs';
 import { createServer, type ServerResponse } from 'node:http';
+import { join } from 'node:path';
 import { emblazon } from './src/index.ts';
 import { heraldrySheet } from './src/preview/heraldry-sheet.ts';
 import { playground } from './src/preview/playground.ts';
@@ -17,6 +19,16 @@ createServer((req, res) => {
 
   if (pathname === '/') return send(res, 200, 'text/html; charset=utf-8', playground());
   if (pathname === '/sheet/heraldry') return send(res, 200, 'text/html; charset=utf-8', heraldrySheet());
+
+  // Generated review pages in out/ (gitignored). Plain names only: no directories, no traversal.
+  const page = pathname.match(/^\/out\/([\w.-]+\.html)$/);
+  if (page) {
+    try {
+      return send(res, 200, 'text/html; charset=utf-8', readFileSync(join('out', page[1]), 'utf8'));
+    } catch {
+      return send(res, 404, 'text/plain; charset=utf-8', 'not found');
+    }
+  }
 
   // GET /heraldry/{input}.svg?size=&v=   and   GET /heraldry/{input}.json?v=
   const m = pathname.match(/^\/heraldry\/(.+)\.(svg|json)$/);

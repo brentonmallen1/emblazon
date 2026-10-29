@@ -2,6 +2,7 @@ export type { Arms } from './arms.ts';
 export * from './blazon.ts';
 export * from './charges.ts';
 export * from './fields.ts';
+export * from './furs.ts';
 export * from './generate.ts';
 export { FIELD_H, FIELD_W } from './geometry.ts';
 export * from './lines.ts';

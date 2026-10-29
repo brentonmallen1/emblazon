@@ -5,10 +5,41 @@
 
 Deterministic, themed avatar generator in the spirit of Robohash. Any input string (email,
 username, UUID) always produces the same emblem. Themes are **coats of arms** first, **mission
-patches** second, more later.
+patches** second, more later. Emblems are imagery only: no text inside them.
 
-Status: **Phase 3 done** — `heraldry@1` generates, renders and blazons; playground and
-contact sheet at `npm run dev`. Next: Phase 4.
+Status: **Phase 4 done** — `heraldry@2` (default) adds 45 game-icons beasts and objects, furs
+and counterchanging; `heraldry@1` is frozen and byte-identical. Next: Phase 5 (jb-rpg
+integration essentials).
+
+---
+
+## 0. First consumer: jb-rpg
+
+emblazon's first job is the **hero's symbol** in jb-rpg (`~/repos/jb-rpg`): after the mad-lib
+character creation, players are offered a handful of generated symbols in the story's theme and
+pick one. The game has six themes, each with its own look (see the "J&B's RPG — Cinematic
+Redesign" design canvas): dark, cinematic, one accent palette per theme.
+
+| jb-rpg theme | Symbol style | emblazon theme | Status |
+|---|---|---|---|
+| fantasy | coat of arms | `heraldry` | ✅ v2 |
+| deep_space | mission patch | `patch` | Phase 6 |
+| cyberpunk | corp / crew insignia: hard geometry, glyph marks, neon on black | `insignia` | Phase 7 |
+| horror | occult seal: wax-seal or ring of marks around a creature (raven, moth, tick…) | `seal` | Phase 7 |
+| insanity | eldritch sigil: radial, asymmetric, tentacles and eyes | `sigil` | Phase 7 |
+| modern | badge / patch: roundel or shield badge with a simple mark | `badge` | Phase 7 |
+
+What this asks of the library (drives Phase 5):
+- **Runs in the browser**: jb-rpg's frontend imports it directly, so hashing must not depend on
+  `node:crypto`.
+- **Options, not just one**: `options(theme, seed, count)` → N distinct emblems for a picker, each
+  with a stable key the game stores (theme, version, input or config) so the hero keeps it.
+- **Reads on dark backgrounds**: the game's screens are near-black; outlines and finish need a
+  check there, not only on light pages.
+- **Attribution**: adapted game-icons art needs a visible credit line somewhere in the game
+  (rules or about screen). `assets/CREDITS.md` has the exact line; charges carry `credit`.
+- Imported charges are tagged with the jb-rpg themes they suit (`horror`, `insanity`,
+  `modern`, …) so later themes can reuse the same vendored art.
 
 ---
 
@@ -149,9 +180,24 @@ hand-authored SVG. `npm run assets` validates and compiles them all. Tags in use
 | 19 | Bell | hand | |
 | 20 | Escallop | geometric | ribbed fan; computed, so it lives in the authoring script |
 
-**Phase 4 additions (needs a sourcing decision, see §8):** lion rampant, lion passant, eagle
-displayed, stag's head, boar's head, dragon, griffin, tree, hunting horn, axe, hammer, castle,
-ship, bee, rose, trefoil, garb (wheat sheaf). Target ~50 charges total by end of Phase 4.
+**Phase 4 additions (v2): 45 charges adapted from game-icons.net** (CC BY 3.0), 65 in all.
+Traditional beasts (lion's head, eagle displayed, stag's head, boar, wolf's head, owl, raven,
+dragon's head, wyvern, griffin, unicorn's head, horse's head, ram's head, bear's head, dolphin,
+swan, bee, sea serpent), deliberately untraditional ones (tick, octopus, crab, snail, scarab,
+scorpion, hare, frog, turtle, seahorse, jellyfish, ammonite, axolotl, bat, hedgehog, mantis,
+dodo, dragonfly, elephant, flamingo, centipede) and objects (rose, oak tree, acorn, castle,
+horseshoe, axe).
+
+- **Kept offline:** unmodified originals are vendored in `assets/vendor/game-icons/` with the
+  upstream license, commit and a manifest; `npm run import-icons` regenerates the charges from
+  them (strip background, normalise path data to absolute 100×100 coordinates, tag
+  compact/tall/wide by aspect) and writes `assets/CREDITS.md`.
+- **Attribution travels with the art:** each imported charge carries `data-credit`, compiled
+  into `CHARGES[id].credit`; the validator refuses adapted art without it.
+- **v2 rule:** charges tagged `beast` never go *on* an ordinary (too detailed at ~9px).
+
+Still not in the set (no good source yet): lion rampant/passant as full beasts, garb,
+hunting horn, ship. Per pall (needs three-tincture fields) is deferred too.
 
 ### 3.3 Placement table (charges per ordinary)
 
@@ -218,14 +264,14 @@ fixed by re-weighting before release.
 | Component | Options | Method |
 |---|---|---|
 | Patch shape | 6–8: circle, shield, oval, rounded triangle, chevron-top, hexagon | parametric |
-| Border | 4–6: single, double, stitched, text ring (top/bottom arcs) | procedural; text via `<textPath>`, then converted to paths |
+| Border | 4–6: single, double, stitched, beaded | procedural; no text ring (emblems are imagery only) |
 | Background | 6–10: deep space gradient, starfield, nebula, horizon | procedural, seeded |
 | Celestial body | 10–15: Earth limb, Moon, Mars, ringed giant, gas giant, ice world | procedural (turbulence bands, craters, rings, terminator) |
 | Vehicle | ~2,000 combos | assembled from ~25 drawn parts: noses, bodies, fins, boosters, plumes; + capsules, landers, satellites; + 3–5 hero pieces (shuttle, rover) |
 | Trajectory | 6–10 | seeded Bézier swooshes / orbit ellipses, tapered |
 | Accents | ~10 | crew stars (count = crew), flag stripes, constellation, astronaut silhouette |
 | Palette | 10–15 | data |
-| Text | mission name + crew names | word lists (Greek letters, mythology, stars, virtues) + syllable generator; OFL font (Oswald / Barlow Condensed) converted to paths with opentype.js at build time |
+| Name (description only) | mission name, e.g. "Artemis-7" | word lists (Greek letters, mythology, stars, virtues); returned as the description, never drawn |
 
 Same contract as heraldry: generate → config → render → describe ("Artemis-7 · Crew of 4").
 
@@ -274,20 +320,24 @@ potrace + manual cleanup. All non-original assets recorded in `assets/CREDITS.md
 | **1. Core + procedural heraldry** | tooling, `core/` (hash, rng, picks), tinctures, shields, line styles, partitions, variations, ordinaries; preview server; sheet sections 1–2 | every procedural option renders cleanly on the sheet |
 | **2. Charges** | geometric authoring script, 9 hand-drawn charges, build/validate script, sheet section 3 | 20 charges pass validation and read at 32px |
 | **3. Generation** | placements, rules, `generate` / `render` / `blazon`, API routes, tests, stats, sheet section 4 | 200-emblem sheet looks good; rule + determinism tests pass; collisions < 1% |
-| **4. Heraldic depth** | furs, counterchanging, beasts & more charges (~50), shading finish, optional "achievement" mode (helm, mantling, motto) for large sizes | `heraldry@2` released; v1 output unchanged |
-| **5. Mission patches** | §4 inventory, parts-based vehicles, text pipeline | `patch@1` meets the same gates |
-| **6. Packaging** | browser build (WebCrypto or bundled sha256), PNG via resvg, caching headers, Docker image for self-hosting, npm package | `docker run` serves both themes |
-| **7. More themes** | backlog: unit insignia, sci-fi faction emblems, guild banners, wax seals | — |
+| **4. Heraldic depth** ✅ | 45 game-icons charges (vendored, credited), furs (ermine, ermines, erminois, pean, vair), counterchanging, v1 frozen by a corpus digest test | `heraldry@2` released; v1 byte-identical; v2 lookalike chance 1 in ~51,700 per pair, 99.1% distinct |
+| **5. jb-rpg essentials** | browser-safe hashing (bundled sha256, sync API), `options(theme, seed, count)` for pickers, a dark-background check on the sheet, attribution helper, how jb-rpg imports it | jb-rpg can offer 4–6 fantasy symbols in its own frontend |
+| **6. Mission patches** | §4 inventory, parts-based vehicles; imagery only (no text ring) | `patch@1` meets the same gates; jb-rpg deep_space uses it |
+| **7. Theme styles for the rest of jb-rpg** | `insignia` (cyberpunk), `seal` (horror), `sigil` (insanity), `badge` (modern), reusing vendored art by theme tag | each meets the same gates on its theme's background |
+| **8. Packaging** | PNG via resvg, caching headers, Docker image for self-hosting, npm package | `docker run` serves all themes |
+| **9. Achievement mode** (optional) | imagery-only display around the shield for large sizes: helm, crest, mantling, supporters; no motto | — |
 
 ---
 
 ## 8. Open decisions
 
-1. **Beasts and complex charges (Phase 4):** game-icons.net (fast, consistent, CC BY
-   attribution), AI-generated + vectorized (custom look, cleanup cost, check tool terms), or
-   hand-drawn/commissioned (best, slowest). Can mix.
-2. **Browser support timing:** needed before Phase 6? Affects whether sha256 is sync (bundled)
-   or async (WebCrypto) in the public API.
-3. **Raster output:** is SVG-only fine for the first deploy?
-4. **Deploy target:** self-hosted Docker (e.g. Unraid) vs. a static/edge function.
-5. **License** for code and original art (e.g. MIT code + CC BY art).
+1. ~~Beasts and complex charges~~ — decided: game-icons.net, vendored with attribution; untraditional
+   creatures welcome.
+2. ~~Browser support timing~~ — decided: needed now for jb-rpg (Phase 5); bundled sync sha256.
+3. **Theme style mapping (§0):** confirm the proposed symbol style per jb-rpg theme before
+   Phase 7.
+4. **How jb-rpg consumes it:** vendored copy, git dependency, or npm package; and where the
+   game shows the credit line.
+5. **Raster output:** is SVG-only fine for the first deploy?
+6. **Deploy target:** self-hosted Docker (e.g. Unraid) vs. a static/edge function.
+7. **License** for code and original art (e.g. MIT code + CC BY art).

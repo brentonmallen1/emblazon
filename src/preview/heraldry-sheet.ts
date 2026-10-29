@@ -2,6 +2,8 @@ import { escapeXml } from '../core/svg.ts';
 import {
   CHARGE_IDS,
   CHARGES,
+  FURS,
+  HERALDRY_VERSION,
   LINE_STYLES,
   LINED_ORDINARIES,
   LINED_PARTITIONS,
@@ -34,12 +36,38 @@ export function heraldrySheet(): string {
       section('Partitions × lines', partitionMatrix()),
       section('Variations', row(VARIATIONS.map((v, i) => tile(renderArms({ shield: 'heater', field: { kind: 'variation', variation: v, tinctures: PAIRS[i] } }), label(v))))),
       section('Ordinaries × lines', ordinaryMatrix()),
-      section('Charges', row(CHARGE_IDS.map((c) => tile(renderCharge(c, 'or'), CHARGES[c].name)))),
+      section('Furs (v2)', furRow()),
+      section('Counterchanging (v2)', counterchangeRow()),
+      section('Charges', row(CHARGE_IDS.map((c) => tile(renderCharge(c, 'or'), CHARGES[c].name + (CHARGES[c].credit ? ' ·' : ''))))),
       section('Charges × tinctures and sizes', chargeMatrix()),
       section('At avatar sizes', sizeRows()),
       section('Generated', generatedGrid(200)),
     ].join(''),
   );
+}
+
+/** Each fur as a field, then as an ordinary on a field it contrasts with. */
+function furRow(): string {
+  const asField = FURS.map((fur) => ({ shield: 'heater', field: { kind: 'plain', tincture: fur } }) satisfies Arms);
+  const onField: Arms[] = [
+    { shield: 'heater', field: { kind: 'plain', tincture: 'gules' }, ordinary: { kind: 'chief', line: 'straight', tincture: 'ermine' } },
+    { shield: 'heater', field: { kind: 'plain', tincture: 'azure' }, ordinary: { kind: 'chevron', line: 'straight', tincture: 'erminois' } },
+    { shield: 'heater', field: { kind: 'plain', tincture: 'gules' }, ordinary: { kind: 'bend', line: 'wavy', tincture: 'vair' } },
+  ];
+  return row([...asField, ...onField].map((arms) => tile(renderArms(arms), blazon(arms))));
+}
+
+/** Ordinaries and charges that swap tinctures across the partition line. */
+function counterchangeRow(): string {
+  const cc = 'counterchanged' as const;
+  const examples: Arms[] = [
+    { shield: 'heater', field: { kind: 'partition', partition: 'perPale', line: 'straight', tinctures: ['or', 'azure'] }, ordinary: { kind: 'chevron', line: 'straight', tincture: cc }, charges: { charge: 'mullet', tincture: cc, at: [{ x: 45, y: 45, size: 44 }, { x: 155, y: 45, size: 44 }, { x: 100, y: 166, size: 42 }] } },
+    { shield: 'heater', field: { kind: 'partition', partition: 'perBend', line: 'straight', tinctures: ['argent', 'gules'] }, charges: { charge: 'lionHead', tincture: cc, at: ONE } },
+    { shield: 'french', field: { kind: 'partition', partition: 'quarterly', line: 'straight', tinctures: ['sable', 'or'] }, charges: { charge: 'roundel', tincture: cc, at: ONE } },
+    { shield: 'heater', field: { kind: 'partition', partition: 'perFess', line: 'wavy', tinctures: ['azure', 'argent'] }, charges: { charge: 'octopus', tincture: cc, at: ONE } },
+    { shield: 'spanish', field: { kind: 'partition', partition: 'gyronny', line: 'straight', tinctures: ['vert', 'or'] }, ordinary: { kind: 'bordure', line: 'straight', tincture: cc } },
+  ];
+  return row(examples.map((arms) => tile(renderArms(arms), blazon(arms))));
 }
 
 /** Metal/colour pairs, rotated through so the sheet isn't one colourway. */
@@ -134,7 +162,7 @@ function generatedGrid(count: number): string {
     const arms = generateArms(input);
     return `<figure title="${escapeXml(`${input}: ${blazon(arms)}`)}">${renderArms(arms, { size: 56 })}<figcaption>${input}</figcaption></figure>`;
   });
-  return `<p class="note">heraldry v1 at 56px. Hover for the blazon; open <a href="/">Try it</a> for any input.</p><div class="grid">${tiles.join('')}</div>`;
+  return `<p class="note">heraldry v${HERALDRY_VERSION} at 56px. Hover for the blazon; open <a href="/">Try it</a> for any input. Charges marked · are adapted from game-icons.net (CC BY 3.0, see assets/CREDITS.md).</p><div class="grid">${tiles.join('')}</div>`;
 }
 
 // --- HTML scaffolding -------------------------------------------------------------------------
