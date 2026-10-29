@@ -1,0 +1,16 @@
+{
+  "name": "emblazon",
+  "version": "0.0.0",
+  "description": "Deterministic heraldic and insignia avatars from any string.",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=23.6"
+  },
+  "scripts": {
+    "dev": "node --watch server.ts",
+    "start": "node server.ts",
+    "sheet": "node scripts/sheet.ts",
+    "test": "node --test \"test/**/*.test.ts\""
+  }
+}
