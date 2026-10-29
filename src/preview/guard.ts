@@ -8,10 +8,10 @@ export interface RateDecision {
   ok: boolean;
   /** Bucket size: requests allowed in a burst. */
   limit: number;
-  /** Whole requests left right now. */
-  remaining: number;
-  /** Seconds until the bucket is full again. */
-  reset: number;
+  /** Whole requests left right now, when the limiter knows. */
+  remaining?: number;
+  /** Seconds until the allowance is full again, when the limiter knows. */
+  reset?: number;
   /** Seconds to wait before the next request is allowed (0 when ok). */
   retryAfter: number;
 }
@@ -129,8 +129,8 @@ export const API_HEADERS: Readonly<Record<string, string>> = {
 export function rateHeaders(d: RateDecision): Record<string, string> {
   return {
     'ratelimit-limit': String(d.limit),
-    'ratelimit-remaining': String(d.remaining),
-    'ratelimit-reset': String(d.reset),
+    ...(d.remaining !== undefined && { 'ratelimit-remaining': String(d.remaining) }),
+    ...(d.reset !== undefined && { 'ratelimit-reset': String(d.reset) }),
     ...(d.ok ? {} : { 'retry-after': String(d.retryAfter) }),
   };
 }

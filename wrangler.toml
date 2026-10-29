@@ -1,0 +1,42 @@
+# emblazon on Cloudflare Workers: https://emblazon.mallen.us
+#
+#   just site          build the static pages into site/ (wrangler also runs this on dev/deploy)
+#   just worker-dev    run it locally on Cloudflare's runtime
+#   just deploy        test, then deploy (CI does this on every push to main)
+#
+# Pages and the picker's modules are static assets, served free without running the Worker.
+# The Worker answers the API and emblem images.
+
+name = "emblazon"
+main = "worker.ts"
+compatibility_date = "2026-10-01"
+
+# Serve only on the custom domain. Cloudflare creates and manages the DNS record for this one
+# hostname in the mallen.us zone; other records in the zone are untouched.
+workers_dev = false
+preview_urls = false
+routes = [{ pattern = "emblazon.mallen.us", custom_domain = true }]
+
+[build]
+command = "node scripts/build-site.ts"
+watch_dir = ["src", "scripts"]
+
+[assets]
+directory = "site"
+html_handling = "auto-trailing-slash"
+not_found_handling = "none"
+
+# Read by the Worker and by scripts/build-site.ts.
+[vars]
+PUBLIC_URL = "https://emblazon.mallen.us"
+# Keep equal to the LIMITER binding's limit below.
+RATE_LIMIT_PER_MINUTE = "120"
+
+# Per-client rate limit, counted by Cloudflare across all of its locations.
+[[ratelimits]]
+name = "LIMITER"
+namespace_id = "4747"
+simple = { limit = 120, period = 60 }
+
+[observability]
+enabled = true

@@ -143,6 +143,7 @@ export function playground(origin: string): string {
   .meta { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin-top: 10px; color: var(--muted); font-size: 13px; }
   .sizes-row { display: flex; align-items: flex-end; gap: 14px; margin-top: 18px; padding: 14px; border-radius: 12px; background: var(--soft); width: max-content; max-width: 100%; transition: background .25s; }
   .sizes-row img { display: block; }
+  .sizes-row:empty { display: none; }
   .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
   .json { margin-top: 14px; }
   .json summary { cursor: pointer; color: var(--muted); font-size: 13px; }
@@ -306,7 +307,11 @@ async function show() {
     select(Math.min(selected, n - 1));
   } catch (err) {
     if (mine !== ticket) return;
+    emblems = [];
+    $('stage').dataset.n = 1;
     $('stage').innerHTML = '<p class="msg">' + String(err.message).replace(/</g, '&lt;') + '</p>';
+    for (const id of ['blazon', 'used', 'ver', 'json']) $(id).textContent = '';
+    $('sizes').innerHTML = '';
   }
 }
 async function copy(btn, text, label) {

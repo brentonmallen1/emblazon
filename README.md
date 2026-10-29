@@ -72,6 +72,26 @@ const { emblems } = await (await fetch(`${EMBLAZON}/api/v1/emblems?${params}`)).
 | `RATE_LIMIT_BURST` | `60` | Requests a client may make at once. |
 
 
+## Deploy
+
+Production runs on Cloudflare Workers at https://emblazon.mallen.us ([wrangler.toml](wrangler.toml)).
+Pages and the picker's modules are prerendered into `site/` and served as static assets; the
+Worker ([worker.ts](worker.ts)) answers the API and emblem images through the same handler the
+Node server uses. Rate limiting there is Cloudflare's own binding, 120 requests per client per
+minute, shared across all locations.
+
+CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) tests every push and pull request and
+deploys `main` when the tests pass. It needs two repository secrets:
+
+| Secret | Where to get it |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | Cloudflare dashboard → My Profile → API Tokens → "Edit Cloudflare Workers" template, scoped to your account and the `mallen.us` zone |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare dashboard → the zone's overview page, right-hand column |
+
+By hand: `just cf-login` once, then `just deploy`. `just worker-dev` runs it locally on
+Cloudflare's runtime; `just cf-tail` streams production logs. Docker (`just docker-up`,
+`just release`) remains for self-hosting.
+
 ## Credits
 
 Some charges are adapted from [game-icons.net](https://game-icons.net) (CC BY 3.0). Anything that
@@ -90,6 +110,7 @@ Needs Node 23.6+ and [just](https://github.com/casey/just). No `npm install`: th
 | `just stats [count] [theme] [version]` | how often two inputs look alike |
 | `just assets` | redraw geometric charges, re-import game-icons from the vendored copies, validate and compile |
 | `just build` | plain ES modules in `dist/` |
+| `just worker-dev` / `just deploy` | run on Cloudflare's runtime locally / test and deploy to Cloudflare |
 | `just docker-up` / `just docker-down` | run the preview server and API in Docker |
 | `just release [tag]` | build and push a linux/amd64 image to `REGISTRY_URL` |
 

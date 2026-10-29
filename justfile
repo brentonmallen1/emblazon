@@ -32,7 +32,7 @@ test:
 
 # Type-check the library as a strict browser app would (fetches TypeScript via npx)
 typecheck:
-    npx -y -p typescript tsc -p tsconfig.browser.json
+    npx -y -p typescript@7.0.2 tsc -p tsconfig.browser.json
 
 # How often two inputs look alike, e.g. `just stats 10000 heraldry 2`
 stats count="10000" theme="heraldry" version="":
@@ -54,7 +54,30 @@ build:
 
 # Clean all generated files
 clean:
-    rm -rf dist out
+    rm -rf dist out site .wrangler
+
+# Cloudflare's CLI, pinned so local deploys match CI
+wrangler := "npx -y wrangler@4.153.0"
+
+# Prerender the site for Cloudflare into site/ (wrangler also runs this before dev and deploy)
+site:
+    node scripts/build-site.ts
+
+# Run the Worker locally on Cloudflare's runtime, with static pages, on :8787
+worker-dev:
+    {{wrangler}} dev
+
+# Sign this machine in to Cloudflare (once, before the first manual deploy)
+cf-login:
+    {{wrangler}} login
+
+# Test, then deploy to Cloudflare (CI does this on every push to main)
+deploy: test typecheck
+    {{wrangler}} deploy
+
+# Stream live logs from the deployed Worker
+cf-tail:
+    {{wrangler}} tail
 
 # Build and run with Docker
 docker-up:

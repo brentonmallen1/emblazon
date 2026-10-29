@@ -22,7 +22,7 @@ const params = (rows: [name: string, type: string, def: string, what: string][])
     .join('')}</tbody></table></div>`;
 
 /** The API reference: how to call the service from jb-rpg or anything else. */
-export function docs(origin: string, limits?: { perMinute: number; burst: number }): string {
+export function docs(origin: string, limitSummary?: string): string {
   const themes = Object.keys(THEMES) as ThemeName[];
   const example = emblemsResult(new URLSearchParams({ input: 'brenton', theme: 'patch', count: '2' }), origin);
   const renderRows: [string, string, string, string][] = [
@@ -170,10 +170,10 @@ const src = \`\${EMBLAZON}/\${choice.theme}/\${encodeURIComponent(choice.input)}
 
 <section id="limits">
   <h2>Rate limits</h2>
-  ${limits
-    ? `<p>Each client may make <b>${limits.burst}</b> requests at once, refilled at <b>${limits.perMinute} per minute</b>. Every request counts once, so a batch of ${MAX_VARIANTS} emblems costs the same as one.</p>`
+  ${limitSummary
+    ? `<p>${limitSummary} Every request counts once, so a batch of ${MAX_VARIANTS} emblems costs the same as one.</p>`
     : '<p>This server has rate limiting turned off.</p>'}
-  <p>Responses carry <code>RateLimit-Limit</code>, <code>RateLimit-Remaining</code> and <code>RateLimit-Reset</code> (seconds until the allowance is full again). Past the limit you get status 429 with <code>Retry-After</code> in seconds.</p>
+  <p>Past the limit you get status 429 with <code>Retry-After</code> in seconds. Responses may also carry <code>RateLimit-Limit</code>, <code>RateLimit-Remaining</code> and <code>RateLimit-Reset</code>.</p>
   <div class="callout">Ask for a whole batch in one call with <code>count</code>, and pin <code>v</code> so browsers and CDNs can cache images for good. Cached responses never reach the server, so they never count.</div>
 </section>
 
