@@ -190,7 +190,7 @@ export function playground(origin: string): string {
     <div class="card controls">
       <label class="label" for="input">Any string</label>
       <div class="field">
-        <input id="input" type="text" value="wren" autocomplete="off" spellcheck="false" placeholder="A username, email or UUID">
+        <input id="input" name="emblem-seed-text" type="text" value="wren" autocomplete="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other" placeholder="Type any text">
         <button id="random" class="btn" type="button" title="Random input">Shuffle</button>
       </div>
       <span class="label" id="themes-label">Theme</span>

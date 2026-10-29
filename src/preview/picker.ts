@@ -30,7 +30,7 @@ export function picker(): string {
   <p class="hint">Generated in this browser from the hero's name. Same name, same choices.</p>
   <div class="row">
     <label class="visually-hidden" for="hero">Hero name</label>
-    <input id="hero" value="Wren Hollowmere" autocomplete="off" spellcheck="false" aria-label="Hero name">
+    <input id="hero" name="hero-name-sample" value="Wren Hollowmere" autocomplete="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other" aria-label="Hero name">
     <button id="reroll" type="button">Other symbols</button>
     <label class="visually-hidden" for="theme">Theme</label>
     <select id="theme" aria-label="Theme" style="font: inherit; padding: 8px; border-radius: 8px; background: #0d0a07; color: #efe3cc; border: 1px solid #ffffff22">
