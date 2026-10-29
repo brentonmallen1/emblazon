@@ -5,13 +5,13 @@ always gives the same emblem, along with its blazon:
 
 > **brenton** → *Vert, a fleur-de-lis Argent, a bordure Or.* (v1)
 
-Built first for hero symbols in jb-rpg; see [docs/PLAN.md §0](docs/PLAN.md).
+Installable and app-agnostic; its themes follow jb-rpg's six (see [docs/PLAN.md §0](docs/PLAN.md)).
 No runtime dependencies. Requires Node 23.6+ (runs TypeScript directly).
 
 ## Use
 
 ```ts
-import { emblazon } from './src/index.ts';
+import { emblazon } from 'emblazon';
 
 const { svg, description, config } = emblazon('alice@example.com', { size: 64 });
 ```
