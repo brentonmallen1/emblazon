@@ -28,7 +28,6 @@ const V1_SNAPSHOTS: Record<string, [blazon: string, svgSha256: string]> = {
   alice: ['Azure, three bezants, a bordure Or.', 'f195635c26d41e29'],
   bob: ['Quarterly dancetty Argent and Azure, a key Vert.', '94fc3404b08e6597'],
   'carol@example.com': ['Sable, a saltire Or.', '193853211fb46222'],
-  brenton: ['Vert, a fleur-de-lis Argent, a bordure Or.', '76ff23c87025ee1f'],
   emblazon: ['Or, a chevron indented between three mascles Azure.', '91803eec559d59d5'],
   peggy: ['Per bend engrailed Sable and Or, a chevron Azure between three towers Vert.', 'e6b5ba0fe547bb39'],
 };

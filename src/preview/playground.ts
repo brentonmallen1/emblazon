@@ -10,7 +10,7 @@ const HERO: readonly [ThemeName, string][] = [
   ['insignia', 'nyx'],
   ['sigil', 'hollow'],
   ['eldritch', 'dagon'],
-  ['badge', 'brenton'],
+  ['badge', 'nova'],
 ];
 
 const onScreen = (t: ThemeName) => ({ backdrop: 'dark' as const, rim: LOOKS[t].accent });
@@ -46,12 +46,12 @@ export function playground(origin: string): string {
     })
     .join('');
 
-  const sample = emblazonMany('brenton', { theme: 'patch', count: 2 });
+  const sample = emblazonMany('wren', { theme: 'patch', count: 2 });
   const sampleJson = JSON.stringify(
     {
       theme: 'patch',
       version: sample[0].version,
-      input: 'brenton',
+      input: 'wren',
       count: 2,
       emblems: sample.map((e) => ({ input: e.input, version: e.version, description: e.description, url: `${origin}/patch/${encodeURIComponent(e.input)}.svg?v=${e.version}`, config: '{…}', svg: '<svg …>' })),
     },
@@ -190,7 +190,7 @@ export function playground(origin: string): string {
     <div class="card controls">
       <label class="label" for="input">Any string</label>
       <div class="field">
-        <input id="input" type="text" value="brenton" autocomplete="off" spellcheck="false" placeholder="A username, email or UUID">
+        <input id="input" type="text" value="wren" autocomplete="off" spellcheck="false" placeholder="A username, email or UUID">
         <button id="random" class="btn" type="button" title="Random input">Shuffle</button>
       </div>
       <span class="label" id="themes-label">Theme</span>
@@ -237,7 +237,7 @@ export function playground(origin: string): string {
       <ul><li>Deterministic and cacheable forever when pinned</li><li>CORS enabled for browser apps</li><li>OpenAPI description included</li></ul>
       <div class="ctas"><a class="btn btn-primary" href="/docs">API docs</a><a class="btn" href="/api/v1/openapi.json">OpenAPI JSON</a></div>
     </div>
-    <pre><span class="req">GET ${escapeXml(origin)}/api/v1/emblems?input=brenton&amp;theme=patch&amp;count=2</span>
+    <pre><span class="req">GET ${escapeXml(origin)}/api/v1/emblems?input=wren&amp;theme=patch&amp;count=2</span>
 
 ${escapeXml(sampleJson)}</pre>
   </div>

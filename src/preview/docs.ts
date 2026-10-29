@@ -24,7 +24,7 @@ const params = (rows: [name: string, type: string, def: string, what: string][])
 /** The API reference: how to call the service from jb-rpg or anything else. */
 export function docs(origin: string, limitSummary?: string): string {
   const themes = Object.keys(THEMES) as ThemeName[];
-  const example = emblemsResult(new URLSearchParams({ input: 'brenton', theme: 'patch', count: '2' }), origin);
+  const example = emblemsResult(new URLSearchParams({ input: 'wren', theme: 'patch', count: '2' }), origin);
   const renderRows: [string, string, string, string][] = [
     ['v', 'integer', 'latest', 'Theme version. Pin it once you store emblems: released versions never change.'],
     ['size', 'integer', '', 'Width and height attributes on the SVG, clamped to 16–1024. Omit for a fluid SVG that fills its box.'],
@@ -87,7 +87,7 @@ export function docs(origin: string, limitSummary?: string): string {
   <h2>Quick start</h2>
   <h3>Show an emblem</h3>
   <p>The image route works straight in an <code>&lt;img&gt;</code> tag.</p>
-  ${code(`<img src="${origin}/patch/brenton.svg?v=2" width="64" height="64" alt="">`)}
+  ${code(`<img src="${origin}/patch/wren.svg?v=2" width="64" height="64" alt="">`)}
   <h3>Offer a choice (e.g. a hero's symbol in jb-rpg)</h3>
   <p>Ask for up to ${MAX_VARIANTS} emblems in one call, then step through them locally: show their URLs and store what the player picks.</p>
   ${code(`const EMBLAZON = '${origin}';
@@ -108,7 +108,7 @@ const src = \`\${EMBLAZON}/\${choice.theme}/\${encodeURIComponent(choice.input)}
 <section id="emblems">
   <h2>Emblems</h2>
   <div class="endpoint"><span class="method">GET</span>/api/v1/emblems</div>
-  <p>One to ${MAX_VARIANTS} emblems for an input, as JSON. <a class="try-link" href="/api/v1/emblems?input=brenton&theme=patch&count=2&svg=0">Try it</a></p>
+  <p>One to ${MAX_VARIANTS} emblems for an input, as JSON. <a class="try-link" href="/api/v1/emblems?input=wren&theme=patch&count=2&svg=0">Try it</a></p>
   ${params([
     ['input', 'string', '', `<b>Required.</b> Any string up to ${MAX_INPUT} characters. Case and surrounding spaces are ignored.`],
     ['theme', 'string', 'heraldry', `One of ${themes.map((t) => `<code>${t}</code>`).join(', ')}.`],
@@ -118,7 +118,7 @@ const src = \`\${EMBLAZON}/\${choice.theme}/\${encodeURIComponent(choice.input)}
   ])}
   <h3>Response</h3>
   <p>Each emblem's <code>input</code> is the exact string that reproduces it; <code>url</code> is pinned to its version.</p>
-  ${code(`GET /api/v1/emblems?input=brenton&theme=patch&count=2`)}
+  ${code(`GET /api/v1/emblems?input=wren&theme=patch&count=2`)}
   ${json(trimmed(example.body))}
   <div class="table"><table><thead><tr><th>Field</th><th>Description</th></tr></thead><tbody>
     <tr><td><code>input</code></td><td>The string that reproduces this emblem by itself. Store it with <code>theme</code> and <code>version</code>.</td></tr>
@@ -133,7 +133,7 @@ const src = \`\${EMBLAZON}/\${choice.theme}/\${encodeURIComponent(choice.input)}
 <section id="images">
   <h2>Images</h2>
   <div class="endpoint"><span class="method">GET</span>/{theme}/{input}.svg</div>
-  <p>The emblem itself, as <code>image/svg+xml</code>. URL-encode the input (a <code>#</code> becomes <code>%23</code>). <a class="try-link" href="/patch/brenton.svg?v=2">Try it</a></p>
+  <p>The emblem itself, as <code>image/svg+xml</code>. URL-encode the input (a <code>#</code> becomes <code>%23</code>). <a class="try-link" href="/patch/wren.svg?v=2">Try it</a></p>
   ${params(renderRows)}
   <div class="endpoint" style="margin-top:18px"><span class="method">GET</span>/{theme}/{input}.json</div>
   <p>The same emblem's metadata without the SVG: <code>theme</code>, <code>version</code>, <code>input</code>, <code>config</code>, <code>description</code>, <code>credits</code>. Takes <code>v</code>.</p>

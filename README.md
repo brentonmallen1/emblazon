@@ -3,7 +3,7 @@
 Deterministic emblems from any string — like Robohash, but coats of arms and mission patches.
 The same input always gives the same emblem, along with a description:
 
-> **brenton** → *Vert, a fleur-de-lis Argent, a bordure Or.* (heraldry v1)
+> **alice** → *Azure, three bezants, a bordure Or.* (heraldry v1)
 >
 > Themes: `heraldry` (coats of arms, v3) and `patch` (mission patches, v1).
 

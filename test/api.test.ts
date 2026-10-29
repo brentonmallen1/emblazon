@@ -28,17 +28,17 @@ test('variants clamp the count', () => {
 });
 
 test('emblems endpoint returns the set with pinned urls', () => {
-  const r = emblemsResult(new URLSearchParams({ input: 'Brenton', theme: 'patch', count: '3', svg: '0' }), ORIGIN);
+  const r = emblemsResult(new URLSearchParams({ input: 'Wren', theme: 'patch', count: '3', svg: '0' }), ORIGIN);
   assert.equal(r.status, 200);
   const body = r.body as { count: number; version: number; emblems: { input: string; url: string; svg?: string; version: number }[] };
   assert.equal(body.count, 3);
   assert.equal(body.version, THEMES.patch.latest);
-  assert.equal(body.emblems[0].url, `${ORIGIN}/patch/Brenton.svg?v=${THEMES.patch.latest}`);
-  assert.match(body.emblems[1].url, /\/patch\/Brenton%23\d+\.svg\?v=\d+$/, 'variant inputs are URL-encoded');
+  assert.equal(body.emblems[0].url, `${ORIGIN}/patch/Wren.svg?v=${THEMES.patch.latest}`);
+  assert.match(body.emblems[1].url, /\/patch\/Wren%23\d+\.svg\?v=\d+$/, 'variant inputs are URL-encoded');
   assert.ok(body.emblems.every((e) => e.svg === undefined), 'svg=0 leaves the markup out');
   assert.equal(r.cache, 'public, max-age=3600');
 
-  const pinned = emblemsResult(new URLSearchParams({ input: 'brenton', v: '1' }), ORIGIN);
+  const pinned = emblemsResult(new URLSearchParams({ input: 'wren', v: '1' }), ORIGIN);
   assert.equal(pinned.cache, 'public, max-age=31536000, immutable');
   assert.match((pinned.body as { emblems: { svg: string }[] }).emblems[0].svg, /^<svg /);
 });
