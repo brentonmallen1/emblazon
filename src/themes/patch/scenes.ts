@@ -45,23 +45,26 @@ export function sceneArt(v: Vehicle, palette: PatchPalette): string {
   const { thread, accent } = palette;
   switch (v.kind) {
     case 'garden': {
-      // A plant under a glass dome on a small ringed world, low in the frame.
+      // A glass dome on the near face of a small ringed world, low in the frame: the dome's
+      // round footprint shows as a floor ring, the planet shows through the glass.
       const world = WORLDS[v.world];
       const plant = PLANTS[v.plant];
       const leaf = leafFor(palette);
-      const ring = (d: string) => `<path d="${d}" fill="none" stroke="${accent}" stroke-width="2.4" transform="rotate(-10 120 178)"/>`;
+      const ring = (d: string) => `<path d="${d}" fill="none" stroke="${accent}" stroke-width="2.4" transform="rotate(-10 120 170)"/>`;
       return (
-        `<g transform="translate(0 -8)">` +
-        ring('M50 178A70 14 0 1 1 190 178A70 14 0 1 1 50 178') +
-        `<path d="${circle(120, 178, 40)}" fill="${world.surface}"/>` +
-        ring('M50 178A70 14 0 0 0 190 178') +
-        `<path d="M76 140A44 44 0 0 1 164 140Z" fill="${thread}" fill-opacity="0.08" stroke="${thread}" stroke-width="2"/>` +
-        `<path d="M86 126A34 34 0 0 1 104 104" fill="none" stroke="${thread}" stroke-opacity="0.6" stroke-width="2.5" stroke-linecap="round"/>` +
-        `<g transform="translate(120 140) scale(0.75) translate(-120 -134)">` +
-        `<path d="${plant.stem}${plant.fronds}" fill="none" stroke="${leaf}" stroke-width="3.5" stroke-linecap="round"/>` +
+        ring('M50 170A70 14 0 1 1 190 170A70 14 0 1 1 50 170') +
+        `<path d="${circle(120, 170, 40)}" fill="${world.surface}"/>` +
+        `<path d="${circle(104, 192, 5)}${circle(140, 184, 3.5)}" fill="${world.band}"/>` +
+        ring('M50 170A70 14 0 0 0 190 170') +
+        `<path d="M86 148A34 8 0 1 1 154 148A34 8 0 1 1 86 148Z" fill="${thread}" fill-opacity="0.18"/>` +
+        `<path d="M86 148A34 34 0 0 1 154 148Z" fill="${thread}" fill-opacity="0.1" stroke="${thread}" stroke-width="2"/>` +
+        `<path d="M86 148A34 8 0 0 0 154 148" fill="none" stroke="${thread}" stroke-width="2"/>` +
+        `<path d="M94 136A26 26 0 0 1 108 118" fill="none" stroke="${thread}" stroke-opacity="0.6" stroke-width="2.2" stroke-linecap="round"/>` +
+        `<g transform="translate(120 148) scale(0.52) translate(-120 -134)">` +
+        `<path d="${plant.stem}${plant.fronds}" fill="none" stroke="${leaf}" stroke-width="4" stroke-linecap="round"/>` +
         (plant.leaves ? `<path d="${plant.leaves}" fill="${leaf}"/>` : '') +
         (plant.bud ? `<path d="${circle(120, 94, plant.bud)}" fill="${accent}"/>` : '') +
-        `</g></g>`
+        `</g>`
       );
     }
     case 'orbits': {

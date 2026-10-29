@@ -1,5 +1,5 @@
 import { NAMES } from './palette.ts';
-import type { Book, Idol, Mark, Tablet } from './types.ts';
+import type { Book, Idol, Relic, Tablet } from './types.ts';
 
 const FRAME_NAMES = { token: 'token', octagon: 'octagon', arch: 'arch', cartouche: 'cartouche' } as const;
 const COUNT = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven'];
@@ -26,7 +26,7 @@ function book(s: Book, glow: string): string {
 }
 
 /** e.g. "A brass token on deep green: a domed limestone idol, wings spread, …". */
-export function describeMark(m: Mark): string {
+export function describeRelic(m: Relic): string {
   const glow = NAMES.glow[m.glow];
   const s = m.subject;
   const what = s.kind === 'idol' ? idol(s, glow) : s.kind === 'tablet' ? tablet(s, glow) : book(s, glow);
@@ -35,7 +35,7 @@ export function describeMark(m: Mark): string {
 }
 
 /** The subject's features you can make out at avatar size. */
-function subjectKey(s: Mark['subject']): string {
+function subjectKey(s: Relic['subject']): string {
   switch (s.kind) {
     case 'idol':
       return [s.kind, s.stone, s.head, s.eyes, s.wings].join(' ');
@@ -47,10 +47,10 @@ function subjectKey(s: Mark['subject']): string {
 }
 
 /** What you notice at a glance: frame shape and colours, the glow, the subject and its outline. */
-export const markLookKey = (m: Mark): string => [m.frame, m.metal, m.field, m.glow, subjectKey(m.subject)].join(' | ');
+export const relicLookKey = (m: Relic): string => [m.frame, m.metal, m.field, m.glow, subjectKey(m.subject)].join(' | ');
 
 /** The subject and its main feature: what a picker should vary. */
-export function markMotif(m: Mark): string {
+export function relicMotif(m: Relic): string {
   const s = m.subject;
   return `${s.kind}:${s.kind === 'idol' ? s.head : s.kind === 'tablet' ? s.carving : s.right}`;
 }

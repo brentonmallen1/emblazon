@@ -54,7 +54,7 @@ function deal() {
   const look = LOOKS[theme];
   document.querySelector('.stage').style.background = look.bg;
   const t0 = performance.now();
-  const options = emblazonOptions(seed, { theme, count: 6, backdrop: 'dark', rim: look.accent, animate: theme === 'mark' });
+  const options = emblazonOptions(seed, { theme, count: 6, backdrop: 'dark', rim: look.accent, animate: theme === 'eldritch' });
   const ms = (performance.now() - t0).toFixed(1);
   $('opts').innerHTML = '';
   for (const e of options) {

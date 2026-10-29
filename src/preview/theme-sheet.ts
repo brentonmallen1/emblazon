@@ -18,7 +18,7 @@ export function themeSheet(theme: ThemeName): string {
   }).join('');
   const sizes = [32, 48, 64, 96, 128].map((px) => `<figure>${sized(emblazon('sizes-demo', { theme }).svg, px)}<figcaption>${px}px</figcaption></figure>`).join('');
   const animated =
-    theme === 'mark'
+    theme === 'eldritch'
       ? section('Animated (animate: true)', `<div class="stage">${[0, 1, 2].map((i) => card(sized(emblazon(`motion${i}`, { theme, animate: true }).svg, 150), 'eyes glowing')).join('')}</div>`)
       : '';
 

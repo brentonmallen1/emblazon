@@ -1,4 +1,5 @@
 import { escapeXml } from '../core/svg.ts';
+import { THEMES } from '../index.ts';
 
 /** Shared page shell for the preview pages. */
 export function page(title: string, subtitle: string, body: string, script = '', module = false): string {
@@ -16,7 +17,8 @@ export function page(title: string, subtitle: string, body: string, script = '',
   main { max-width: 1180px; margin: 0 auto; padding: 32px 16px 96px; }
   h1 { font-size: 22px; margin: 0; letter-spacing: -0.01em; }
   nav { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13px; margin-bottom: 20px; color: var(--muted); }
-  nav a { color: var(--muted); }
+  nav a { color: var(--muted); text-decoration: none; padding: 2px 0; border-bottom: 1px solid transparent; }
+  nav a:hover { color: var(--fg); border-bottom-color: var(--fg); }
   .sub, .note { color: var(--muted); margin: 4px 0 0; }
   .note { margin: 0 0 12px; font-size: 13px; }
   section { margin-top: 40px; }
@@ -39,7 +41,7 @@ export function page(title: string, subtitle: string, body: string, script = '',
 </head>
 <body>
 <main>
-<nav><a href="/">Try it</a><a href="/picker">Hero symbol picker</a><span>Sheets:</span><a href="/sheet/heraldry">heraldry</a><a href="/sheet/patch">patch</a><a href="/sheet/insignia">insignia</a><a href="/sheet/sigil">sigil</a><a href="/sheet/mark">mark</a><a href="/sheet/badge">badge</a></nav>
+<nav><a href="/">Try it</a><a href="/picker">Hero symbol picker</a><span>Sheets:</span>${Object.keys(THEMES).map((t) => `<a href="/sheet/${t}">${t}</a>`).join('')}</nav>
 <h1>${escapeXml(title)}</h1>
 <p class="sub">${escapeXml(subtitle)}</p>
 ${body}

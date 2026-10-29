@@ -62,7 +62,7 @@ export function renderPatch(p: Patch, { size, backdrop = 'light', rim = DEFAULT_
     (path?.front ?? '');
   // Triangles draw the round-frame scene smaller, centred in the triangle; the sky stays full size.
   const fit = sceneTransform(p.shape);
-  const art = skyLayer(p.sky, palette) + (fit ? `<g transform="${fit}">${scene}</g>` : scene);
+  const art = skyLayer(p.sky, palette, p.shape) + (fit ? `<g transform="${fit}">${scene}</g>` : scene);
 
   const dims = size ? ` width="${size}" height="${size}"` : '';
   return (

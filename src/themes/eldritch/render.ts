@@ -7,14 +7,14 @@ import { framePaths, frameOver, frameUnder, patternLayer } from './frame.ts';
 import { idolArt } from './idol.ts';
 import { FIELD_HEX, GLOW_HEX, METAL_HEX } from './palette.ts';
 import { tabletArt } from './tablet.ts';
-import type { Mark } from './types.ts';
+import type { Relic } from './types.ts';
 
 /**
- * Pure: the same mark and options always produce the same SVG string. Marks have one look, flat
+ * Pure: the same relic and options always produce the same SVG string. Relics have one look, flat
  * (after jb-rpg's insanity symbol), so `style` and `finish` don't change them. `animate` makes
  * the glowing parts pulse slowly.
  */
-export function renderMark(m: Mark, { size, backdrop = 'light', rim = DEFAULT_RIM, animate = false }: RenderOptions = {}): string {
+export function renderRelic(m: Relic, { size, backdrop = 'light', rim = DEFAULT_RIM, animate = false }: RenderOptions = {}): string {
   const id = `mk${fnv1a(JSON.stringify(m))}`;
   const metal = METAL_HEX[m.metal];
   const field = FIELD_HEX[m.field];

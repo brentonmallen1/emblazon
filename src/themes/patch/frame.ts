@@ -1,5 +1,5 @@
 import { parsePath, serializePath, transformPath } from '../../core/path.ts';
-import { n } from '../../core/svg.ts';
+import { n, type Pt } from '../../core/svg.ts';
 import type { BorderStyle, PaletteId, PatchShape } from './types.ts';
 
 /** Patch canvas: 240×240, centred at (120,120). Shapes reach ~110 from the centre. */
@@ -77,21 +77,67 @@ export function sceneTransform(shape: PatchShape): string {
   return `translate(${n(pivot[0])} ${n(pivot[1])}) scale(${n(k)}) translate(${-CENTER} ${-CENTER})`;
 }
 
-/** Half-width and half-height of each shape about the centre, for placing marks in the band. */
-const EXTENT: Readonly<Record<PatchShape, readonly [number, number]>> = {
-  circle: [110, 110],
-  oval: [92, 112],
-  shield: [100, 108],
-  hexagon: [97, 112],
-  octagon: [103.5, 103.5],
-  square: [106, 106],
-  // Triangles carry no marks in the band; these only keep the table complete.
-  triangle: [108, 95],
-  triangleDown: [108, 95],
+/** Round shapes: half-axes about the centre. */
+const ELLIPSES: Readonly<Partial<Record<PatchShape, readonly [number, number]>>> = { circle: [REACH, REACH], oval: [92, 112] };
+
+/** Points along a cubic from p0 to p3, for turning the shield's curved sides into a polygon. */
+function cubic(p0: Pt, p1: Pt, p2: Pt, p3: Pt, steps: number): Pt[] {
+  return Array.from({ length: steps }, (_, i) => {
+    const t = (i + 1) / steps;
+    const u = 1 - t;
+    const at = (k: 0 | 1) => u ** 3 * p0[k] + 3 * u * u * t * p1[k] + 3 * u * t * t * p2[k] + t ** 3 * p3[k];
+    return [at(0), at(1)];
+  });
+}
+
+/** The other shapes as polygons (the square's rounded corners chamfered), outer size. */
+const VERTICES: Readonly<Partial<Record<PatchShape, readonly Pt[]>>> = {
+  shield: [[20, 12], [220, 12], [220, 108], ...cubic([220, 108], [220, 168], [176, 207], [120, 230], 6), ...cubic([120, 230], [64, 207], [20, 168], [20, 108], 6)],
+  hexagon: [[120, 8], [217, 64], [217, 176], [120, 232], [23, 176], [23, 64]],
+  octagon: [[77.1, 16.5], [162.9, 16.5], [223.5, 77.1], [223.5, 162.9], [162.9, 223.5], [77.1, 223.5], [16.5, 162.9], [16.5, 77.1]],
+  square: [[42, 14], [198, 14], [217.8, 22.2], [226, 42], [226, 198], [217.8, 217.8], [198, 226], [42, 226], [22.2, 217.8], [14, 198], [14, 42], [22.2, 22.2]],
+  triangle: [[120, 16], [228, 206], [12, 206]],
+  triangleDown: [[120, 224], [228, 34], [12, 34]],
 };
 
-/** Shapes with a flat top edge, and where it sits: crew stars run along it in a straight row. */
-const FLAT_TOP: Readonly<Partial<Record<PatchShape, number>>> = { shield: 12, octagon: 16.5, square: 14 };
+/** Even-odd point-in-polygon test. */
+function inPolygon(poly: readonly Pt[], x: number, y: number): boolean {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i];
+    const [xj, yj] = poly[j];
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+/** True when (x, y) lies inside the shape's edge drawn `inset` units in from the outer edge. */
+export function insideShape(shape: PatchShape, x: number, y: number, inset: number): boolean {
+  const [px, py, reach] = PIVOT[shape] ?? [CENTER, CENTER, REACH];
+  const k = (reach - inset) / reach;
+  // Map the point back onto the outer outline, which the inset one is a scaling of.
+  const ux = px + (x - px) / k;
+  const uy = py + (y - py) / k;
+  const ell = ELLIPSES[shape];
+  if (ell) return ((ux - CENTER) / ell[0]) ** 2 + ((uy - CENTER) / ell[1]) ** 2 <= 1;
+  return inPolygon(VERTICES[shape]!, ux, uy);
+}
+
+/** Where a ray from the centre at angle `a` leaves the outer polygon. */
+function rayExit(poly: readonly Pt[], a: number): Pt {
+  const [dx, dy] = [Math.cos(a), Math.sin(a)];
+  let best = Infinity;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [ex, ey] = [poly[i][0] - poly[j][0], poly[i][1] - poly[j][1]];
+    const det = dx * ey - dy * ex;
+    if (Math.abs(det) < 1e-9) continue;
+    const [wx, wy] = [poly[j][0] - CENTER, poly[j][1] - CENTER];
+    const t = (wx * ey - wy * ex) / det;
+    const s = (wx * dy - wy * dx) / det;
+    if (t > 0 && s >= 0 && s <= 1 && t < best) best = t;
+  }
+  return [CENTER + dx * best, CENTER + dy * best];
+}
 
 const cache = new Map<string, string>();
 
@@ -108,14 +154,15 @@ export function shapePath(shape: PatchShape, inset = 0): string {
   return d;
 }
 
-/** A point in the middle of the band at angle `a` (radians, 0 = right, −π/2 = top). */
+/**
+ * A point in the middle of the band at angle `a` (radians, 0 = right, −π/2 = top): on the
+ * shape's own edge, so marks follow a hexagon's roof rather than an ellipse through its peak.
+ */
 export function bandPoint(shape: PatchShape, a: number): [number, number] {
-  const [rx, ry] = EXTENT[shape];
   const k = (REACH - BAND / 2) / REACH;
-  // Flat-topped shapes: keep marks on the straight top edge rather than an ellipse.
-  const top = FLAT_TOP[shape];
-  if (top !== undefined && Math.sin(a) < -0.5) return [CENTER + Math.cos(a) * rx * k, top + BAND / 2];
-  return [CENTER + Math.cos(a) * rx * k, CENTER + Math.sin(a) * ry * k];
+  const ell = ELLIPSES[shape];
+  const [x, y] = ell ? [CENTER + Math.cos(a) * ell[0], CENTER + Math.sin(a) * ell[1]] : rayExit(VERTICES[shape]!, a);
+  return [CENTER + (x - CENTER) * k, CENTER + (y - CENTER) * k];
 }
 
 /** The frame: dark band, outer and inner rings in the accent colour, and the border's detail. */

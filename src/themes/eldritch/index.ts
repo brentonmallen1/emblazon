@@ -1,5 +1,5 @@
 /**
- * Insanity mark (after jb-rpg's insanity symbol), in an Arkham, 1920s-occult key: an idol, a
+ * Eldritch relic (after jb-rpg's insanity symbol), in an Arkham, 1920s-occult key: an idol, a
  * carved tablet or a forbidden book, in a brass or art-deco frame, with eyes that glow. Flat,
  * no text; optional slow pulse.
  */

@@ -2,7 +2,7 @@ import type { RenderOptions } from './core/render-options.ts';
 import * as heraldryTheme from './themes/heraldry/index.ts';
 import * as badgeTheme from './themes/badge/index.ts';
 import * as insigniaTheme from './themes/insignia/index.ts';
-import * as markTheme from './themes/mark/index.ts';
+import * as eldritchTheme from './themes/eldritch/index.ts';
 import * as patchTheme from './themes/patch/index.ts';
 import * as sigilTheme from './themes/sigil/index.ts';
 import type { Theme } from './themes/theme.ts';
@@ -11,7 +11,7 @@ export * as heraldry from './themes/heraldry/index.ts';
 export * as patch from './themes/patch/index.ts';
 export * as insignia from './themes/insignia/index.ts';
 export * as sigil from './themes/sigil/index.ts';
-export * as mark from './themes/mark/index.ts';
+export * as eldritch from './themes/eldritch/index.ts';
 export * as badge from './themes/badge/index.ts';
 export { ATTRIBUTION } from './themes/heraldry/index.ts';
 export type { RenderOptions } from './core/render-options.ts';
@@ -23,7 +23,7 @@ interface Configs {
   patch: patchTheme.Patch;
   insignia: insigniaTheme.Insignia;
   sigil: sigilTheme.Sigil;
-  mark: markTheme.Mark;
+  eldritch: eldritchTheme.Relic;
   badge: badgeTheme.Badge;
 }
 export type ThemeName = keyof Configs;
@@ -73,14 +73,14 @@ export const THEMES: { readonly [T in ThemeName]: Theme<Configs[T]> } = {
     credits: sigilTheme.sigilCredits,
     styleFor: () => 'flat',
   },
-  mark: {
-    versions: markTheme.MARK_VERSIONS,
-    latest: markTheme.MARK_VERSION,
-    generate: markTheme.generateMark,
-    render: markTheme.renderMark,
-    describe: markTheme.describeMark,
-    lookKey: markTheme.markLookKey,
-    motif: markTheme.markMotif,
+  eldritch: {
+    versions: eldritchTheme.ELDRITCH_VERSIONS,
+    latest: eldritchTheme.ELDRITCH_VERSION,
+    generate: eldritchTheme.generateRelic,
+    render: eldritchTheme.renderRelic,
+    describe: eldritchTheme.describeRelic,
+    lookKey: eldritchTheme.relicLookKey,
+    motif: eldritchTheme.relicMotif,
     credits: () => [],
     styleFor: () => 'flat',
   },

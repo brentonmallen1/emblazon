@@ -1,5 +1,5 @@
-/** An insanity mark. The stable contract between generate() and render(). Imagery only. */
-export interface Mark {
+/** An eldritch relic. The stable contract between generate() and render(). Imagery only. */
+export interface Relic {
   frame: FrameShape;
   /** Faint pattern on the field, behind the subject. */
   pattern: Pattern;

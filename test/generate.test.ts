@@ -47,11 +47,11 @@ const FROZEN: [theme: ThemeName, version: number, sha256: string][] = [
   ['heraldry', 1, 'ac1349f373a697bd88f590220a1fb66013f8da8b960cbdb39b63fd809c01a57a'],
   ['heraldry', 2, 'd0302e3f70d47e4c5dab295ac1a9793daac6e7e55ae1eb2bfa78eb575c0ff2d3'],
   ['heraldry', 3, '9f54b7f3537e02299edcfa14175868dde9116f23ee63eee8adf4dc5575cab2b5'],
-  ['patch', 1, 'dc436d74bd0b6a03709ed2b51052346cd4567e8879655696471c54c0c6cc776b'],
-  ['patch', 2, 'f7b2445cec0fd4f0eacce8bd20c8b7d2de4b6e76faa58165884fbefee2102b40'],
+  ['patch', 1, '7833ecf990330b4bafbaeae0a41615226ca9adb0b4cb07a00d66393b77fd623e'],
+  ['patch', 2, '96be061d8fd799a5cdd63f692596d749379ea6eff3f0f0d5a8b02a46ddd71eb8'],
   ['insignia', 1, '0680ac292273579910d28e5d0db5fe5b56dd2c52502636eb76b90aba1b76b9df'],
-  ['sigil', 1, 'bdd752091c9a2d9665ec32d966798d5ae34e1cda063652b1da0b9d6587a8f85e'],
-  ['mark', 1, '354e1b6e5d1ab4cc18abfc30d137cdee595440849dc4b80d8d971251cbb2f250'],
+  ['sigil', 1, '92cb3563345f5a2ac34fa7fdfe9ddb7cfc8c7d86a101b45f859299d5d759d6f8'],
+  ['eldritch', 1, '6d79aac9b90eae3db76d54dd57cd6f29acd179a613ff7a6ae82258bfc36094aa'],
   ['badge', 1, 'cb9cfb17f6d96f042116428ed8db69e9655d25a705f4297d150ac0dbfc0e5e2f'],
 ];
 

@@ -9,12 +9,19 @@ patches** second, more later. Emblems are imagery only: no text inside them.
 
 Status: **Phase 7 done** — all six jb-rpg themes generate, each from the
 directions picked on the samples canvas (§9): `insignia` (hazard tag, neon tag, corp stamp, with
-real letters), `sigil` (watching seal, wax seal, thorned rune), `mark` (idol, tablet, forbidden
+real letters), `sigil` (watching seal, wax seal, thorned rune), `eldritch` (idol, tablet, forbidden
 book), `badge` (flat badge, sticker), and `patch@2` (triangle frames; starship, ring station,
 garden dome and orbit scenes in place of the rocket). heraldry v1–v3 and patch v1 are unchanged
 byte-for-byte. Lookalike chance per pair: heraldry 1 in ~46,900, patch@2 1 in ~23,300,
-insignia 1 in ~56,400, sigil 1 in ~13,900, mark 1 in ~188,700, badge 1 in ~32,300. Every released
+insignia 1 in ~56,400, sigil 1 in ~13,900, eldritch 1 in ~188,700, badge 1 in ~32,300. Every released
 version's corpus is frozen by digest. Next: Phase 8 (packaging).
+
+Polish pass (29 Oct 2026, before any release): render-only fixes re-froze patch v1/v2, sigil v1 and
+eldritch v1 (the theme formerly `mark`): band marks follow each frame's real edge (no stars past a
+hexagon's peak), sky stars never straddle the inner edge, thorn-rune blood drips from the rune
+inside the plate, dark waxes stamp lighter, the idol got sockets instead of a brow line, the garden
+dome sits on its world, satellites got a bus and dish, stations twin arrays. Heraldry, insignia and
+badge are byte-identical. Once published, no released version changes again.
 
 ---
 
@@ -32,7 +39,7 @@ Cinematic Redesign" design canvas): dark, cinematic, one accent palette per them
 | deep_space | mission patch: no text, round or triangle frames | `patch` | ✅ v2 |
 | cyberpunk | crew tag: hazard tag, neon tag or corp stamp, with letters and numbers | `insignia` | ✅ v1 |
 | horror | occult seal: watching seal, wax seal or thorned rune | `sigil` | ✅ v1 |
-| insanity | Arkham-style relic: an idol, a carved tablet or a forbidden book | `mark` | ✅ v1 |
+| insanity | Arkham-style relic: an idol, a carved tablet or a forbidden book | `eldritch` | ✅ v1 |
 | modern | flat badge or die-cut sticker | `badge` | ✅ v1 |
 
 What an app like that needs from the package (Phase 5 delivered these):
@@ -327,7 +334,7 @@ potrace + manual cleanup. All non-original assets recorded in `assets/CREDITS.md
 | **4. Heraldic depth** ✅ | 45 game-icons charges (vendored, credited), furs (ermine, ermines, erminois, pean, vair), counterchanging, v1 frozen by a corpus digest test | `heraldry@2` released; v1 byte-identical; v2 lookalike chance 1 in ~51,700 per pair, 99.1% distinct |
 | **5. App-ready library** ✅ | pure-JS sync SHA-256 (identical output), `emblazonOptions(seed, {count})` (distinct looks and charges, stable, each stores `{input, version}`), `backdrop: 'dark'` rim, `ATTRIBUTION` + per-emblem `credits`, `exports` → `src/`, `npm run build` → `dist/`, `/picker` demo running in the browser | the picker runs client-side (6 options in ~3 ms); `src/` passes a strict browser `tsc` (`tsconfig.browser.json`); built JS matches source byte-for-byte |
 | **6. Mission patches + flat style** ✅ | flat `patch@1`: 6 frame shapes, 4 ring styles, 16 accent palettes, 7 flat bodies (incl. the mock-up's dune world), parametric craft (rocket, capsule, lander, rover, satellite, probe), orbit/swoosh, crew stars in the band; flat `heraldry@3`; `style` option; per-version default style | patch 1 in ~11,400 lookalike pairs; heraldry v1–v3 and patch v1 frozen by corpus digests |
-| **7. The remaining theme styles** | flat like jb-rpg's mock-ups: `insignia` (cyberpunk crew tag), `sigil` (horror: line-art seal, eye/triangle/circle motifs), `mark` (insanity: restless spiral line work), `badge` (modern), reusing vendored art by theme tag | each meets the same gates on its theme's background |
+| **7. The remaining theme styles** | flat like jb-rpg's mock-ups: `insignia` (cyberpunk crew tag), `sigil` (horror: line-art seal, eye/triangle/circle motifs), `eldritch` (insanity: idol, tablet, forbidden book), `badge` (modern), reusing vendored art by theme tag | each meets the same gates on its theme's background |
 | **8. Packaging** | installable package: published (npm or a git dependency) with `dist/` JS and `.d.ts` types alongside the TS source; PNG via resvg; Docker image for the HTTP service | an app adds it with one install command and imports it |
 | **9. Achievement mode** (optional) | imagery-only display around the shield for large sizes: helm, crest, mantling, supporters; no motto | — |
 

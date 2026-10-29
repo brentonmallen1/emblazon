@@ -19,8 +19,8 @@ const WINGS = {
 const BUST = 'M68 206C70 168 94 146 120 146C146 146 170 168 172 206Z';
 
 const HEADS = {
-  dome: { shape: 'M92 128C88 96 100 72 120 70C140 72 152 96 148 128Z', brow: 'M98 104Q120 94 142 104', third: 90 },
-  mantle: { shape: 'M94 128C90 100 104 54 120 46C136 54 150 100 146 128Z', brow: 'M100 106Q120 98 140 106', third: 86 },
+  dome: { shape: 'M92 128C88 96 100 72 120 70C140 72 152 96 148 128Z', ridge: 'M120 80V100', third: 90 },
+  mantle: { shape: 'M94 128C90 100 104 54 120 46C136 54 150 100 146 128Z', ridge: 'M120 60V100', third: 86 },
 } as const;
 
 /** Behind the head: a spiked crown or a pair of horns (left horn; the right is mirrored). */
@@ -55,14 +55,16 @@ export function idolArt(s: Idol, ctx: ArtContext): string {
   if (s.head === 'crowned') out += `<path d="${CROWN}" fill="${stone.face}" ${line(1.8)}/>`;
   if (s.head === 'horned') out += `<g fill="${stone.face}" ${line(1.8)}><path d="${HORN}"/><path d="${HORN}" transform="${MIRROR}"/></g>`;
   out += `<path d="${head.shape}" fill="${stone.face}" ${line(2)}/>`;
-  out += `<path d="${head.brow}" fill="none" stroke="${INK}" stroke-width="2"/>`;
-
-  // Eyes slant toward the nose; a third sits above the brow.
-  const pair =
-    `<ellipse cx="108" cy="112" rx="5.5" ry="2.8" transform="rotate(14 108 112)"/>` +
-    `<ellipse cx="132" cy="112" rx="5.5" ry="2.8" transform="rotate(-14 132 112)"/>`;
+  // A ridge down the forehead, then sunken sockets the eyes glow out of. (A single brow line
+  // across the dome read as an upside-down smile.)
+  out += `<path d="${head.ridge}" fill="none" stroke="${INK}" stroke-width="2" stroke-linecap="round"/>`;
+  const socket = (cx: number, cy: number, rx: number, ry: number, rot: number) =>
+    `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" transform="rotate(${rot} ${cx} ${cy})"/>`;
+  const sockets =
+    s.eyes === 1 ? socket(120, 113, 11.5, 5.8, 0) : socket(108, 112, 8.5, 4.8, 14) + socket(132, 112, 8.5, 4.8, -14) + (s.eyes === 3 ? socket(120, head.third, 5.2, 5.2, 0) : '');
+  out += `<g fill="${stone.shade}" ${line(1.5)}>${sockets}</g>`;
   const eyes =
-    s.eyes === 1 ? `<ellipse cx="120" cy="113" rx="8" ry="3.6"/>` : pair + (s.eyes === 3 ? `<circle cx="120" cy="${head.third}" r="3.2"/>` : '');
+    s.eyes === 1 ? `<ellipse cx="120" cy="113" rx="8" ry="3.6"/>` : socket(108, 112, 5.5, 2.8, 14) + socket(132, 112, 5.5, 2.8, -14) + (s.eyes === 3 ? `<circle cx="120" cy="${head.third}" r="3.2"/>` : '');
   out += `<g fill="${ctx.glow}"${ctx.glowAttr}>${eyes}</g>`;
 
   // The beard: tentacles fanning out from under the eyes, longest in the middle.

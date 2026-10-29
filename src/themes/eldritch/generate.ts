@@ -1,12 +1,12 @@
 import { normalizeInput } from '../../core/hash.ts';
 import { chance, int, pick, rngFor, weighted, type Rng } from '../../core/rng.ts';
 import { LEATHER_CLASH } from './palette.ts';
-import { FIELDS, FLESH, GLOWS, LEATHERS, METALS, STONES, type Book, type FieldId, type Idol, type Mark, type Tablet } from './types.ts';
+import { FIELDS, FLESH, GLOWS, LEATHERS, METALS, STONES, type Book, type FieldId, type Idol, type Relic, type Tablet } from './types.ts';
 
-export const MARK_VERSION = 1;
-export const MARK_VERSIONS: readonly number[] = [1];
+export const ELDRITCH_VERSION = 1;
+export const ELDRITCH_VERSIONS: readonly number[] = [1];
 
-/** Pick weights for mark v1. Frozen once released, like heraldry's. Key order matters. */
+/** Pick weights for eldritch v1. Frozen once released, like heraldry's. Key order matters. */
 const W1 = {
   kinds: { idol: 1, tablet: 1, book: 1 },
   frames: { token: 3, octagon: 3, arch: 2, cartouche: 2 },
@@ -35,11 +35,11 @@ const W1 = {
 const seed = (rng: Rng): number => int(rng, 0, 0x7fffffff);
 
 /** Pure and deterministic, one seeded stream per slot (see heraldry's generateArms). */
-export function generateMark(input: string, version: number = MARK_VERSION): Mark {
-  if (!MARK_VERSIONS.includes(version)) throw new RangeError(`mark v${version} does not exist (have: ${MARK_VERSIONS.join(', ')})`);
+export function generateRelic(input: string, version: number = ELDRITCH_VERSION): Relic {
+  if (!ELDRITCH_VERSIONS.includes(version)) throw new RangeError(`eldritch v${version} does not exist (have: ${ELDRITCH_VERSIONS.join(', ')})`);
   const w = W1;
   const key = normalizeInput(input);
-  const slot = (name: string) => rngFor(`v${version}`, 'mark', name, key);
+  const slot = (name: string) => rngFor(`v${version}`, 'eldritch', name, key);
 
   const cRng = slot('colours');
   const metal = pick(cRng, METALS);

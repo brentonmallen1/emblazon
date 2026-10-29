@@ -18,12 +18,12 @@ export const INK_HEX: Readonly<Record<Ink, { line: string; name: string }>> = {
 /** Wax body, the deeper colour a stamp presses into it, and its sheen. */
 export const WAX_HEX: Readonly<Record<Wax, { wax: string; deep: string; hi: string; name: string }>> = {
   red: { wax: '#8E1D17', deep: '#55100C', hi: '#C2453A', name: 'red' },
-  black: { wax: '#2A2323', deep: '#0B0909', hi: '#655A5A', name: 'black' },
+  black: { wax: '#2A2323', deep: '#6E6060', hi: '#655A5A', name: 'black' },
   bone: { wax: '#D6C8AC', deep: '#8F8168', hi: '#F3EAD6', name: 'bone' },
   plum: { wax: '#4B2A5C', deep: '#2A1534', hi: '#7E5A92', name: 'plum' },
   moss: { wax: '#3F5A2E', deep: '#22331A', hi: '#6F8F55', name: 'moss-green' },
   ochre: { wax: '#B07A2A', deep: '#6B4512', hi: '#D9A55C', name: 'ochre' },
-  oxblood: { wax: '#5E1A22', deep: '#340C12', hi: '#8E3A44', name: 'oxblood' },
+  oxblood: { wax: '#5E1A22', deep: '#B2525C', hi: '#8E3A44', name: 'oxblood' },
 };
 
 export const RIBBON_HEX: Readonly<Record<Ribbon, string>> = {
@@ -306,7 +306,7 @@ function thornArt(sg: ThornSigil): string {
   switch (sg.ring) {
     case 'thorns':
       art += stroke(circle(C, C, 90), 3, ' stroke-dasharray="18 6"') + stroke(circle(C, C, 95), 3, ' stroke-dasharray="18 6" stroke-dashoffset="12"');
-      art += fill(around(18, (a) => thorn(a, 96, 109)));
+      art += fill(around(18, (a) => thorn(a, 96, 107)));
       break;
     case 'briar': {
       // A twisting vine with thorns turning out and in by turns.
@@ -315,7 +315,7 @@ function thornArt(sg: ThornSigil): string {
         return polar(C, C, 93 + 3.5 * Math.sin(a * 14), a);
       });
       art += stroke(polyline(vine, true), 3.5, ' stroke-linejoin="round"');
-      art += fill(around(14, (a, i) => (i % 2 ? thorn(a, 90, 79, 0.045) : thorn(a, 96, 108))));
+      art += fill(around(14, (a, i) => (i % 2 ? thorn(a, 90, 79, 0.045) : thorn(a, 96, 106))));
       break;
     }
     case 'nails': {
@@ -326,13 +326,13 @@ function thornArt(sg: ThornSigil): string {
       break;
     }
   }
-  // Blood runs from the bottom of the ring.
-  const DRIPS: Readonly<Record<number, readonly [deg: number, length: number][]>> = {
-    1: [[90, 22]],
-    2: [[83, 20], [98, 15]],
-    3: [[80, 17], [90, 22], [101, 14]],
-  };
-  art += fill((DRIPS[sg.drips] ?? []).map(([deg, l]) => drip(...polar(C, C, 97, (deg * Math.PI) / 180), 9, l)).join(''));
+  // Blood runs from the rune itself, off the foot of its stave (both feet of a crossed one), so it
+  // stays inside the plate instead of hanging off the ring.
+  const feet: Record<number, readonly [x: number, y: number, length: number][]> =
+    sg.stave === 'crossed'
+      ? { 1: [[146, 176, 20]], 2: [[94, 176, 16], [146, 176, 22]], 3: [[94, 176, 16], [146, 176, 22], [120, 132, 12]] }
+      : { 1: [[120, 184, 22]], 2: [[117, 184, 20], [125, 184, 14]], 3: [[114, 184, 16], [121, 184, 22], [128, 184, 13]] };
+  art += fill((feet[sg.drips] ?? []).map(([x, y, l]) => drip(x, y, 8, l)).join(''));
   return art + stroke(runePath(sg), RUNE_WIDTH, ' stroke-linecap="square" stroke-linejoin="miter"');
 }
 

@@ -6,6 +6,6 @@ export const LOOKS: Readonly<Record<ThemeName, { bg: string; accent: string; lab
   patch: { bg: '#0b0f1c', accent: '#f0b060', label: 'deep space · mission patch' },
   insignia: { bg: '#0a090b', accent: '#f2e64a', label: 'cyberpunk · crew tag' },
   sigil: { bg: '#0c0b0b', accent: '#e0574b', label: 'horror · sigil' },
-  mark: { bg: '#0f0c14', accent: '#a9dc7e', label: "insanity · an idol, a tablet or a forbidden book" },
+  eldritch: { bg: '#0f0c14', accent: '#a9dc7e', label: 'insanity · eldritch relic' },
   badge: { bg: '#1a1a2e', accent: '#667eea', label: 'modern · badge' },
 };

@@ -97,9 +97,13 @@ export function vehicleArt(v: Vehicle, palette: PatchPalette): string {
         line('M-20 0H20' + (v.panels === 'quad' ? 'M0 -22V22' : ''), 2.4) +
         panel(-66, -11, 46, 22) + panel(20, -11, 46, 22) +
         (v.panels === 'quad' ? panel(-11, -66, 22, 44) + panel(-11, 22, 22, 44) : '') +
-        fill('M-13 -14H13V14H-13Z', FOIL) +
-        fill('M-10 -26Q0 -12 10 -26Z', hull) +
-        line('M0 -20V-34', 1.8)
+        bell(0, 16, 0.6) +
+        fill('M-14 -16H14V16H-14Z', FOIL) +
+        fill('M-14 -3h28v6h-28Z', accent) +
+        fill('M-5 -12h10v6h-10Z', glass) +
+        fill('M-16 -24Q0 -6 16 -24Z', hull) +
+        line('M0 -15V-34', 1.8) +
+        `<circle cx="0" cy="-35" r="2.6" fill="${accent}"/>`
       );
     }
     case 'probe': {
@@ -137,17 +141,21 @@ export function vehicleArt(v: Vehicle, palette: PatchPalette): string {
       const ring = (d: string) =>
         `<path d="${d}" fill="none" stroke="${hull}" stroke-width="9"/>` +
         `<path d="${d}" fill="none" stroke="${accent}" stroke-width="2" stroke-dasharray="3 7"/>`;
+      // Solar arrays come in pairs either side of the mast, with a module at each end of it.
       const panel = (y: number) =>
-        fill(`M-30 ${y}H30V${y + 14}H-30Z`, accent) + line(`M-15 ${y}V${y + 14}M0 ${y}V${y + 14}M15 ${y}V${y + 14}M-30 ${y + 7}H30`, 1.2, glass);
+        fill(`M-34 ${y}H-4V${y + 14}H-34ZM4 ${y}H34V${y + 14}H4Z`, accent) +
+        line(`M-24 ${y}V${y + 14}M-14 ${y}V${y + 14}M14 ${y}V${y + 14}M24 ${y}V${y + 14}M-34 ${y + 7}H34`, 1.2, glass);
+      const module = (y: number) => fill(`M-8 ${y}h16v12h-16Z`, hull) + fill(`M-3 ${y + 3}h6v6h-6Z`, glass);
       return (
-        fill('M-4 -48h8v100h-8Z', METAL) +
-        (v.panels !== 'none' ? panel(-60) : '') +
-        (v.panels === 'both' ? panel(46) : '') +
+        fill('M-3 -48h6v100h-6Z', METAL) +
+        (v.panels !== 'none' ? panel(-62) : '') +
+        (v.panels === 'both' ? panel(48) : '') +
+        module(-46) +
         ring('M-64 0A64 22 0 1 1 64 0A64 22 0 1 1 -64 0') +
         line('M-64 0H64M0 -22V22' + (v.spokes === 4 ? 'M-45.3 -15.6L45.3 15.6M-45.3 15.6L45.3 -15.6' : ''), 3) +
         `<circle cx="0" cy="0" r="13" fill="${hull}"/><circle cx="0" cy="0" r="5" fill="${accent}"/>` +
         ring('M-64 0A64 22 0 0 0 64 0') +
-        (v.panels !== 'both' ? `<circle cx="0" cy="54" r="3.5" fill="${accent}"/>` : '')
+        (v.panels !== 'both' ? module(36) : '')
       );
     }
     case 'garden':
@@ -183,7 +191,7 @@ export function vehicleBox(v: Vehicle): { top: number; bottom: number; width: nu
     case 'lander':
       return { top: -54, bottom: 56, width: 106 };
     case 'satellite':
-      return v.panels === 'quad' ? { top: -66, bottom: 66, width: 134 } : { top: -34, bottom: 14, width: 134 };
+      return v.panels === 'quad' ? { top: -66, bottom: 66, width: 134 } : { top: -38, bottom: 22, width: 134 };
     case 'rover':
       return { top: -44, bottom: 35, width: 90 };
     case 'probe':
@@ -192,7 +200,7 @@ export function vehicleBox(v: Vehicle): { top: number; bottom: number; width: nu
       // Fit to the ship and the bright part of its trails; the faded tail may run past.
       return { top: -50, bottom: 70, width: v.wings === 'dart' ? 60 : v.wings === 'swept' ? 80 : 92 };
     case 'station':
-      return { top: v.panels === 'none' ? -48 : -60, bottom: v.panels === 'both' ? 60 : 57.5, width: 137 };
+      return { top: v.panels === 'none' ? -48 : -62, bottom: v.panels === 'both' ? 62 : 52, width: 137 };
     case 'garden':
     case 'orbits':
       return { top: -100, bottom: 100, width: 200 };
