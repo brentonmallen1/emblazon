@@ -77,9 +77,9 @@ const VEHICLES_SHOWN: readonly [Vehicle, string][] = [
   [{ kind: 'starship', wings: 'dart', engines: 1 }, 'starship · dart'],
   [{ kind: 'station', panels: 'top', spokes: 2 }, 'ring station'],
   [{ kind: 'station', panels: 'both', spokes: 4 }, 'ring station · 4 spokes'],
-  [{ kind: 'garden', plant: 'sprout', world: 'frost' }, 'garden · sprout'],
-  [{ kind: 'garden', plant: 'flower', world: 'ocean' }, 'garden · flower'],
-  [{ kind: 'garden', plant: 'fern', world: 'sand' }, 'garden · fern'],
+  [{ kind: 'garden', plant: 'sprout', world: 'frost', sky: 'moon' }, 'garden · sprout, crescent'],
+  [{ kind: 'garden', plant: 'flower', world: 'ocean', sky: 'ringed' }, 'garden · flower, ringed planet'],
+  [{ kind: 'garden', plant: 'fern', world: 'sand', sky: 'sun' }, 'garden · fern, sun'],
   [{ kind: 'orbits', rings: 2, moons: 1, bands: true, world: 'ochre' }, 'orbits · 2 rings'],
   [{ kind: 'orbits', rings: 3, moons: 2, bands: false, world: 'rust' }, 'orbits · 3 rings, 2 moons'],
   // The rocket: v1 only.

@@ -20,7 +20,8 @@ Polish pass (29 Oct 2026, before any release): render-only fixes re-froze patch 
 eldritch v1 (the theme formerly `mark`): band marks follow each frame's real edge (no stars past a
 hexagon's peak), sky stars never straddle the inner edge, thorn-rune blood drips from the rune
 inside the plate, dark waxes stamp lighter, the idol got eye sockets instead of a brow line, the garden
-dome sits on its world, satellites got a bus and dish, stations twin arrays. Heraldry, insignia and
+dome moved from a small planet to a planet's surface (ground, horizon, a moon, ringed world or sun
+in the sky, an airlock), satellites got a bus and dish, stations twin arrays. Heraldry, insignia and
 badge are byte-identical. Once published, no released version changes again.
 
 ---

@@ -1,4 +1,4 @@
-import { SURFACE_CRAFT, type BodyKind, type Patch, type Vehicle, type WorldTone } from './types.ts';
+import { SURFACE_CRAFT, type BodyKind, type GardenSky, type Patch, type Vehicle, type WorldTone } from './types.ts';
 
 const BODY_NAMES: Readonly<Record<BodyKind, string>> = {
   earth: 'Earth',
@@ -29,11 +29,18 @@ function vehicleName(v: Vehicle): string {
     case 'station':
       return 'a ring station';
     case 'garden':
-      return `a ${v.plant} under a dome on ${WORLD_NAMES[v.world]}`;
+      return `a ${v.plant} under a dome on ${WORLD_NAMES[v.world]}${GARDEN_SKY_NAMES[v.sky]}`;
     case 'orbits':
       return `${WORLD_NAMES[v.world]} inside ${v.rings} crossing orbits`;
   }
 }
+
+const GARDEN_SKY_NAMES: Readonly<Record<GardenSky, string>> = {
+  moon: ' beneath a crescent moon',
+  ringed: ' beneath a ringed planet',
+  sun: ' beneath a small sun',
+  none: '',
+};
 
 const WORLD_NAMES: Readonly<Record<WorldTone, string>> = {
   ash: 'a grey moon',

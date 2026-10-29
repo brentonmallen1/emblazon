@@ -1,7 +1,7 @@
 import { circle } from '../../core/draw.ts';
 import { n } from '../../core/svg.ts';
 import type { PatchPalette } from './frame.ts';
-import type { Plant, Vehicle, WorldTone } from './types.ts';
+import type { GardenSky, Plant, Vehicle, WorldTone } from './types.ts';
 
 /** Small worlds for the scene centrepieces: surface colour and a darker band. */
 export const WORLDS: Readonly<Record<WorldTone, { surface: string; band: string }>> = {
@@ -40,31 +40,70 @@ const PLANTS: Readonly<Record<Plant, { stem: string; leaves: string; fronds: str
 const GREEN_ACCENTS = new Set(['#A9DC7E', '#4FC1A6', '#7FE0B0']);
 const leafFor = (palette: PatchPalette): string => (GREEN_ACCENTS.has(palette.accent) ? '#5E9E6A' : '#7FE0B0');
 
+/** Linear blend of two #RRGGBB colours, `t` of the way from `a` to `b`. */
+function mix(a: string, b: string, t: number): string {
+  const ch = (i: number) => Math.round(parseInt(a.slice(i, i + 2), 16) * (1 - t) + parseInt(b.slice(i, i + 2), 16) * t);
+  return `#${[1, 3, 5].map((i) => ch(i).toString(16).padStart(2, '0')).join('')}`.toUpperCase();
+}
+
+/** What hangs over the garden's plain, in the upper right: nothing, a crescent, a ringed world or a sun. */
+function gardenSky(sky: GardenSky, { thread, accent }: PatchPalette): string {
+  const [cx, cy] = [166, 80];
+  switch (sky) {
+    case 'moon':
+      return `<path d="M${cx} ${cy - 14}A14 14 0 1 0 ${cx} ${cy + 14}A10 14 0 1 1 ${cx} ${cy - 14}Z" fill="${thread}"/>`;
+    case 'ringed':
+      return (
+        `<path d="${circle(cx, cy, 11)}" fill="${WORLDS.ash.surface}"/>` +
+        `<ellipse cx="${cx}" cy="${cy}" rx="21" ry="5" fill="none" stroke="${accent}" stroke-width="1.8" transform="rotate(-15 ${cx} ${cy})"/>`
+      );
+    case 'sun': {
+      const rays = Array.from({ length: 8 }, (_, i) => {
+        const a = (i * Math.PI) / 4;
+        const [dx, dy] = [Math.cos(a), Math.sin(a)];
+        return `M${n(cx + dx * 12)} ${n(cy + dy * 12)}L${n(cx + dx * 16)} ${n(cy + dy * 16)}`;
+      }).join('');
+      return `<path d="${circle(cx, cy, 9)}" fill="${accent}"/><path d="${rays}" stroke="${accent}" stroke-width="1.6" stroke-linecap="round"/>`;
+    }
+    case 'none':
+      return '';
+  }
+}
+
 /** A scene centrepiece in canvas coordinates, for a round frame centred on (120, 120). */
 export function sceneArt(v: Vehicle, palette: PatchPalette): string {
   const { thread, accent } = palette;
   switch (v.kind) {
     case 'garden': {
-      // A glass dome on the near face of a small ringed world, low in the frame: the dome's
-      // round footprint shows as a floor ring, the planet shows through the glass.
+      // A habitat dome standing on a planet's surface: a curved horizon fills the lower third,
+      // the sky above may hold a moon, a ringed planet or a sun. The dome's back wall is an
+      // opaque tint of the sky so the plant reads against it; a floor band and an airlock at
+      // its side make it a building rather than a bubble.
       const world = WORLDS[v.world];
       const plant = PLANTS[v.plant];
       const leaf = leafFor(palette);
-      const ring = (d: string) => `<path d="${d}" fill="none" stroke="${accent}" stroke-width="2.4" transform="rotate(-10 120 170)"/>`;
+      const wall = mix(palette.inner, thread, 0.14);
       return (
-        ring('M50 170A70 14 0 1 1 190 170A70 14 0 1 1 50 170') +
-        `<path d="${circle(120, 170, 40)}" fill="${world.surface}"/>` +
-        `<path d="${circle(104, 192, 5)}${circle(140, 184, 3.5)}" fill="${world.band}"/>` +
-        ring('M50 170A70 14 0 0 0 190 170') +
-        `<path d="M86 148A34 8 0 1 1 154 148A34 8 0 1 1 86 148Z" fill="${thread}" fill-opacity="0.18"/>` +
-        `<path d="M86 148A34 34 0 0 1 154 148Z" fill="${thread}" fill-opacity="0.1" stroke="${thread}" stroke-width="2"/>` +
-        `<path d="M86 148A34 8 0 0 0 154 148" fill="none" stroke="${thread}" stroke-width="2"/>` +
-        `<path d="M94 136A26 26 0 0 1 108 118" fill="none" stroke="${thread}" stroke-opacity="0.6" stroke-width="2.2" stroke-linecap="round"/>` +
-        `<g transform="translate(120 148) scale(0.52) translate(-120 -134)">` +
-        `<path d="${plant.stem}${plant.fronds}" fill="none" stroke="${leaf}" stroke-width="4" stroke-linecap="round"/>` +
+        gardenSky(v.sky, palette) +
+        // Ground: a lit rim along the horizon over the darker plain, with craters and rocks.
+        `<path d="${circle(120, 404, 252)}" fill="${world.surface}"/>` +
+        `<path d="${circle(120, 414, 252)}" fill="${world.band}"/>` +
+        `<ellipse cx="72" cy="176" rx="12" ry="3.5" fill="none" stroke="${world.surface}" stroke-width="1.6"/>` +
+        `<ellipse cx="176" cy="188" rx="9" ry="2.6" fill="none" stroke="${world.surface}" stroke-width="1.4"/>` +
+        `<path d="M58 164l6 -6 7 6ZM166 168l5 -4 6 4Z" fill="${world.band}"/>` +
+        // Dome: opaque back wall, pane lines, floor, the plant, then the glass front edge.
+        `<path d="M78 152A42 42 0 0 1 162 152Z" fill="${wall}" stroke="${thread}" stroke-width="2"/>` +
+        `<path d="M120 110V152M120 110Q144.4 131 146 152M120 110Q95.6 131 94 152" fill="none" stroke="${thread}" stroke-opacity="0.45" stroke-width="1.4"/>` +
+        `<path d="M78 152A42 8.4 0 0 0 162 152" fill="${world.band}"/>` +
+        `<g transform="translate(120 153) scale(0.64) translate(-120 -134)">` +
+        `<path d="${plant.stem}${plant.fronds}" fill="none" stroke="${leaf}" stroke-width="3.5" stroke-linecap="round"/>` +
         (plant.leaves ? `<path d="${plant.leaves}" fill="${leaf}"/>` : '') +
         (plant.bud ? `<path d="${circle(120, 94, plant.bud)}" fill="${accent}"/>` : '') +
-        `</g>`
+        `</g>` +
+        `<path d="M78 152A42 8.4 0 0 0 162 152" fill="none" stroke="${thread}" stroke-width="2"/>` +
+        `<path d="M91.9 139A25.9 25.9 0 0 1 109.2 118.5" fill="none" stroke="${thread}" stroke-opacity="0.6" stroke-width="2.2" stroke-linecap="round"/>` +
+        // Airlock.
+        `<path d="M160 140h16v12h-16Z" fill="${thread}"/><path d="M165 144h6v8h-6Z" fill="${wall}"/>`
       );
     }
     case 'orbits': {

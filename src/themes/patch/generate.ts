@@ -21,7 +21,7 @@ const W1 = {
 
 /**
  * v2: triangle frames, and new centrepieces in place of the old rocket: a starship, a ring
- * station, a garden under a dome and a world inside crossing orbits.
+ * station, a garden dome on a planet's surface and a world inside crossing orbits.
  */
 const W2 = {
   ...W1,
@@ -80,7 +80,8 @@ export function generatePatch(input: string, version: number = PATCH_VERSION): P
   const accents = {
     // A triangle's band is too narrow for crew stars.
     crew: isTriangle(shape) ? 0 : crew,
-    moon: body?.kind !== 'moon' && chance(aRng, 0.3),
+    // No second moon beside a Moon body or a garden's own sky body.
+    moon: body?.kind !== 'moon' && !(vehicle.kind === 'garden' && vehicle.sky !== 'none') && chance(aRng, 0.3),
     constellation: chance(aRng, 0.3),
     seed: seed(aRng),
   };
@@ -119,7 +120,7 @@ function makeVehicle(rng: Rng, kind: VehicleKind): Vehicle {
     case 'station':
       return { kind, panels: weighted(rng, { top: 2, both: 1, none: 1 }), spokes: chance(rng, 0.5) ? 4 : 2 };
     case 'garden':
-      return { kind, plant: pick(rng, PLANTS), world: pick(rng, WORLD_TONES) };
+      return { kind, plant: pick(rng, PLANTS), world: pick(rng, WORLD_TONES), sky: weighted(rng, { moon: 2, ringed: 2, sun: 1, none: 2 }) };
     case 'orbits':
       return { kind, rings: chance(rng, 0.6) ? 2 : 3, moons: Number(weighted(rng, { 0: 1, 1: 2, 2: 1 })) as 0 | 1 | 2, bands: chance(rng, 0.6), world: pick(rng, WORLD_TONES) };
   }

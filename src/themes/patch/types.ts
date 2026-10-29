@@ -43,7 +43,7 @@ export type Vehicle =
   // v2 centrepieces. A garden or an orbit scene brings its own small world, so it has no body.
   | { kind: 'starship'; wings: 'delta' | 'swept' | 'dart'; engines: 1 | 2 | 3 }
   | { kind: 'station'; panels: 'top' | 'both' | 'none'; spokes: 2 | 4 }
-  | { kind: 'garden'; plant: Plant; world: WorldTone }
+  | { kind: 'garden'; plant: Plant; world: WorldTone; sky: GardenSky }
   | { kind: 'orbits'; rings: 2 | 3; moons: 0 | 1 | 2; bands: boolean; world: WorldTone };
 
 export type VehicleKind = Vehicle['kind'];
@@ -54,6 +54,10 @@ export type Plant = (typeof PLANTS)[number];
 
 export const WORLD_TONES = ['ash', 'rust', 'ocean', 'sand', 'ochre', 'frost'] as const;
 export type WorldTone = (typeof WORLD_TONES)[number];
+
+/** What hangs in the sky over a garden dome's plain. */
+export const GARDEN_SKIES = ['moon', 'ringed', 'sun', 'none'] as const;
+export type GardenSky = (typeof GARDEN_SKIES)[number];
 
 /** Centrepieces that draw their own world, in canvas coordinates, instead of a placed craft. */
 export const SCENES: readonly VehicleKind[] = ['garden', 'orbits'];

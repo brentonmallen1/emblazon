@@ -51,7 +51,9 @@ export function renderPatch(p: Patch, { size, backdrop = 'light', rim = DEFAULT_
     vehicleArt(p.vehicle, palette) +
     `</g>`;
   const path = p.trajectory?.kind === 'orbit' ? orbit(palette, at.x, at.y, p.trajectory.flip, id) : undefined;
-  const freeSide = p.body?.placement === 'left' ? 'right' : p.body?.placement === 'right' ? 'left' : 'both';
+  // A garden's sky body hangs in the upper right, so its accents go left.
+  const gardenSky = p.vehicle.kind === 'garden' && p.vehicle.sky !== 'none';
+  const freeSide = p.body?.placement === 'left' ? 'right' : p.body?.placement === 'right' || gardenSky ? 'left' : 'both';
 
   const scene =
     skyAccents(p.accents, palette, freeSide) +
