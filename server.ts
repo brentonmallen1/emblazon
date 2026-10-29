@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import { createServer, type ServerResponse } from 'node:http';
 import { join } from 'node:path';
 import { THEMES, emblazon, type ThemeName } from './src/index.ts';
+import { cacheFor, emblemsResult, openApi, readRender, themesResult, type ApiResult } from './src/preview/api.ts';
+import { docs } from './src/preview/docs.ts';
 import { heraldrySheet } from './src/preview/heraldry-sheet.ts';
 import { patchSheet } from './src/preview/patch-sheet.ts';
 import { themeSheet } from './src/preview/theme-sheet.ts';
@@ -11,16 +13,37 @@ import { toBrowserJs } from './scripts/lib/browser-js.ts';
 
 const PORT = Number(process.env.PORT ?? 4747);
 
-function send(res: ServerResponse, status: number, type: string, body: string, cache = 'no-store'): void {
-  res.writeHead(status, { 'content-type': type, 'cache-control': cache });
+function send(res: ServerResponse, status: number, type: string, body: string, cache = 'no-store', cors = false): void {
+  res.writeHead(status, { 'content-type': type, 'cache-control': cache, ...(cors && { 'access-control-allow-origin': '*' }) });
   res.end(body);
+}
+
+/** API responses: JSON, readable from any origin (emblems are public and deterministic). */
+const sendJson = (res: ServerResponse, r: ApiResult): void => send(res, r.status, 'application/json; charset=utf-8', JSON.stringify(r.body), r.cache, true);
+
+/** Where this server is reached, for absolute URLs in API responses and docs. */
+function originOf(headers: Record<string, string | string[] | undefined>): string {
+  const proto = String(headers['x-forwarded-proto'] ?? 'http').split(',')[0].trim();
+  const host = String(headers['x-forwarded-host'] ?? headers.host ?? `localhost:${PORT}`).split(',')[0].trim();
+  return `${proto}://${host}`;
 }
 
 createServer((req, res) => {
   const url = new URL(req.url ?? '/', 'http://localhost');
   const { pathname, searchParams } = url;
+  const origin = originOf(req.headers);
 
-  if (pathname === '/') return send(res, 200, 'text/html; charset=utf-8', playground());
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204, { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, OPTIONS', 'access-control-max-age': '86400' });
+    return res.end();
+  }
+
+  if (pathname === '/') return send(res, 200, 'text/html; charset=utf-8', playground(origin));
+  if (pathname === '/docs') return send(res, 200, 'text/html; charset=utf-8', docs(origin));
+  if (pathname === '/api/v1/emblems') return sendJson(res, emblemsResult(searchParams, origin));
+  if (pathname === '/api/v1/themes') return sendJson(res, themesResult());
+  if (pathname === '/api/v1/openapi.json') return sendJson(res, { status: 200, body: openApi(origin), cache: 'public, max-age=3600' });
+  if (pathname.startsWith('/api/')) return sendJson(res, { status: 404, body: { error: { code: 'not_found', message: 'no such endpoint; see /docs' } }, cache: 'no-store' });
   if (pathname === '/sheet/heraldry') return send(res, 200, 'text/html; charset=utf-8', heraldrySheet(searchParams.get('style') === 'classic' ? 'classic' : 'flat'));
   if (pathname === '/sheet/patch') return send(res, 200, 'text/html; charset=utf-8', patchSheet());
   const sheet = pathname.match(/^\/sheet\/(\w+)$/);
@@ -53,27 +76,19 @@ createServer((req, res) => {
   // GET /{theme}/{input}.svg?size=&v=&backdrop=dark&rim=   and   GET /{theme}/{input}.json?v=
   const m = pathname.match(/^\/(\w+)\/(.+)\.(svg|json)$/);
   if (m && Object.hasOwn(THEMES, m[1])) {
-    const theme = m[1] as ThemeName;
     let input: string;
     try {
       input = decodeURIComponent(m[2]);
     } catch {
-      return send(res, 400, 'text/plain; charset=utf-8', 'malformed input');
+      return send(res, 400, 'text/plain; charset=utf-8', 'malformed input', 'no-store', true);
     }
-    const { versions, latest } = THEMES[theme];
-    const version = Number(searchParams.get('v') ?? latest);
-    if (!versions.includes(version)) return send(res, 400, 'text/plain; charset=utf-8', `unknown ${theme} version; have ${versions.join(', ')}`);
-    const sizeParam = searchParams.get('size');
-    const size = sizeParam ? Math.min(1024, Math.max(16, Math.round(Number(sizeParam)) || 0)) : undefined;
-    const backdrop = searchParams.get('backdrop') === 'dark' ? 'dark' : undefined;
-    const rim = searchParams.get('rim') ?? undefined;
-
-    const emblem = emblazon(input, { theme, version, size, backdrop, rim });
-    // Output is a pure function of the URL, so a pinned version can be cached forever.
-    const cache = searchParams.has('v') ? 'public, max-age=31536000, immutable' : 'public, max-age=3600';
-    if (m[3] === 'svg') return send(res, 200, 'image/svg+xml', emblem.svg, cache);
+    const parsed = readRender(m[1], searchParams);
+    if (!parsed.ok) return send(res, 400, 'text/plain; charset=utf-8', (parsed.error.body as { error: { message: string } }).error.message, 'no-store', true);
+    const { theme, ...options } = parsed.value;
+    const emblem = emblazon(input, { theme, ...options });
+    if (m[3] === 'svg') return send(res, 200, 'image/svg+xml', emblem.svg, cacheFor(searchParams), true);
     const { svg: _svg, ...meta } = emblem;
-    return send(res, 200, 'application/json', JSON.stringify(meta), cache);
+    return send(res, 200, 'application/json', JSON.stringify(meta), cacheFor(searchParams), true);
   }
 
   send(res, 404, 'text/plain; charset=utf-8', 'not found');

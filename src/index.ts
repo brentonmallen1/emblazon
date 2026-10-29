@@ -164,6 +164,42 @@ export function emblazonOptions<T extends ThemeName = 'heraldry'>(
   return picked;
 }
 
+/** Most emblems `emblazonMany` returns for one input. */
+export const MAX_VARIANTS = 10;
+
+export interface ManyRequest<T extends ThemeName = ThemeName> extends EmblazonOptions<T> {
+  /** How many emblems, 1 to MAX_VARIANTS (default 1). */
+  count?: number;
+}
+
+/**
+ * Up to ten different emblems for one input. The first is exactly `emblazon(input)`; the rest
+ * are fixed variants (`${input}#1`, `#2`, …, skipping any that look like one already picked).
+ * Like the single emblem, the set never changes for a given input, theme and version, and each
+ * emblem's `input` is the string that reproduces it on its own.
+ */
+export function emblazonMany<T extends ThemeName = 'heraldry'>(
+  input: string,
+  { count = 1, theme, version, ...render }: ManyRequest<T> = {},
+): Emblem<T>[] {
+  const name = (theme ?? 'heraldry') as T;
+  const t = THEMES[name] as unknown as Theme<Configs[T]>;
+  const v = version ?? t.latest;
+  const want = Math.min(MAX_VARIANTS, Math.max(1, Math.floor(count)));
+  const first = t.generate(input, v);
+  const picked: Emblem<T>[] = [build(name, t, input, first, v, render)];
+  const looks = new Set([t.lookKey(first)]);
+  for (let i = 1; picked.length < want && i <= want * 12; i++) {
+    const variant = `${input}#${i}`;
+    const config = t.generate(variant, v);
+    const look = t.lookKey(config);
+    if (looks.has(look)) continue;
+    looks.add(look);
+    picked.push(build(name, t, variant, config, v, render));
+  }
+  return picked;
+}
+
 function build<T extends ThemeName>(theme: T, t: Theme<Configs[T]>, input: string, config: Configs[T], version: number, render: RenderOptions): Emblem<T> {
   const svg = t.render(config, { style: t.styleFor(version), ...render });
   return { theme, version, input, svg, config, description: t.describe(config), credits: t.credits(config) } as Emblem<T>;

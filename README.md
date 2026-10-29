@@ -45,6 +45,23 @@ const { svg } = emblazon(chosen.input, { theme: chosen.theme, version: chosen.ve
   there); `npm run build` writes plain ES modules to `dist/` for everything else.
 - Try it at `/picker` on the preview server: the same page imports the library in the browser.
 
+## As a service
+
+The preview server doubles as an HTTP API, so an app can call it instead of depending on the
+package. Full reference at `/docs` on the running server; OpenAPI 3.1 at `/api/v1/openapi.json`.
+
+```ts
+const params = new URLSearchParams({ input: `${sessionId}:${heroName}`, theme: 'patch', count: '10', svg: '0' });
+const { emblems } = await (await fetch(`${EMBLAZON}/api/v1/emblems?${params}`)).json();
+// Show emblems[i].url; store the chosen { theme, input, version }.
+```
+
+- `GET /api/v1/emblems?input=&theme=&count=1..10&v=&size=&backdrop=dark&rim=&svg=0`: one to ten
+  emblems. The first is the plain emblem for the input; the rest are fixed variants (`input#1`, …).
+  There is no seed parameter: as with Robohash, the input is the seed.
+- `GET /{theme}/{input}.svg?v=` for `<img>` tags, `.json` for metadata, `GET /api/v1/themes`.
+- CORS is open, and version-pinned responses are cacheable forever.
+
 ## Credits
 
 Some charges are adapted from [game-icons.net](https://game-icons.net) (CC BY 3.0). Anything that
@@ -57,7 +74,7 @@ Needs Node 23.6+ and [just](https://github.com/casey/just). No `npm install`: th
 
 | Command | What it does |
 |---|---|
-| `just dev` | preview server with reload on :4747 (`PORT` in `.env`): playground `/`, picker `/picker`, sheets `/sheet/heraldry` and `/sheet/patch`, emblems at `/{theme}/{input}.svg?size=&v=&backdrop=dark` and `.json` |
+| `just dev` | site and API with reload on :4747 (`PORT` in `.env`): home and playground `/`, API docs `/docs`, picker `/picker`, sheets `/sheet/{theme}`, emblems at `/api/v1/emblems` and `/{theme}/{input}.svg` |
 | `just test` | frozen-version snapshots and corpus digest, rule checks per theme and version, asset contract |
 | `just typecheck` | type-check the library as a strict browser app would |
 | `just stats [count] [theme] [version]` | how often two inputs look alike |
