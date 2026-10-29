@@ -61,6 +61,16 @@ const { emblems } = await (await fetch(`${EMBLAZON}/api/v1/emblems?${params}`)).
   There is no seed parameter: as with Robohash, the input is the seed.
 - `GET /{theme}/{input}.svg?v=` for `<img>` tags, `.json` for metadata, `GET /api/v1/themes`.
 - CORS is open, and version-pinned responses are cacheable forever.
+- Per-client rate limits (token bucket, `RateLimit-*` headers, 429 with `Retry-After`), strict
+  security headers, inert SVGs, request timeouts and size limits.
+
+| Setting | Default | What it does |
+|---|---|---|
+| `PUBLIC_URL` | from the `Host` header | Base URL for links in responses and docs. Set it in production. |
+| `TRUST_PROXY` | off | Behind a proxy or CDN, take client IPs and host from its forwarding headers. Without it, every client behind the proxy shares one limit. |
+| `RATE_LIMIT_PER_MINUTE` | `120` | Sustained requests per client per minute; `0` turns limiting off. |
+| `RATE_LIMIT_BURST` | `60` | Requests a client may make at once. |
+
 
 ## Credits
 

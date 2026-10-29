@@ -5,4 +5,8 @@ services:
       - "${PORT:-4747}:${PORT:-4747}"
     environment:
       - PORT=${PORT:-4747}
+      - PUBLIC_URL=${PUBLIC_URL:-}
+      - TRUST_PROXY=${TRUST_PROXY:-}
+      - RATE_LIMIT_PER_MINUTE=${RATE_LIMIT_PER_MINUTE:-120}
+      - RATE_LIMIT_BURST=${RATE_LIMIT_BURST:-60}
     restart: unless-stopped

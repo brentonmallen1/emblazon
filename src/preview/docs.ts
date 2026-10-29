@@ -22,14 +22,14 @@ const params = (rows: [name: string, type: string, def: string, what: string][])
     .join('')}</tbody></table></div>`;
 
 /** The API reference: how to call the service from jb-rpg or anything else. */
-export function docs(origin: string): string {
+export function docs(origin: string, limits?: { perMinute: number; burst: number }): string {
   const themes = Object.keys(THEMES) as ThemeName[];
   const example = emblemsResult(new URLSearchParams({ input: 'brenton', theme: 'patch', count: '2' }), origin);
   const renderRows: [string, string, string, string][] = [
     ['v', 'integer', 'latest', 'Theme version. Pin it once you store emblems: released versions never change.'],
     ['size', 'integer', '', 'Width and height attributes on the SVG, clamped to 16–1024. Omit for a fluid SVG that fills its box.'],
     ['backdrop', '<code>dark</code>', '', 'Adds a thin rim outside the outline so the edge reads on near-black screens.'],
-    ['rim', 'colour', '#EDE6D6', 'Rim colour for <code>backdrop=dark</code>, e.g. the theme accent from <code>/api/v1/themes</code>. URL-encode the <code>#</code>.'],
+    ['rim', 'colour', '#EDE6D6', 'Rim colour for <code>backdrop=dark</code>: a hex colour such as the theme accent from <code>/api/v1/themes</code>, or a CSS colour name. URL-encode the <code>#</code>.'],
   ];
 
   const toc: [string, string][] = [
@@ -41,6 +41,7 @@ export function docs(origin: string): string {
     ['variants', 'Variants'],
     ['versions', 'Versions and storage'],
     ['caching', 'Caching and CORS'],
+    ['limits', 'Rate limits'],
     ['errors', 'Errors'],
     ['credits', 'Credits'],
   ];
@@ -167,6 +168,15 @@ const src = \`\${EMBLAZON}/\${choice.theme}/\${encodeURIComponent(choice.input)}
   <p>Every API and image response carries <code>Access-Control-Allow-Origin: *</code>, so browser apps can call the service directly.</p>
 </section>
 
+<section id="limits">
+  <h2>Rate limits</h2>
+  ${limits
+    ? `<p>Each client may make <b>${limits.burst}</b> requests at once, refilled at <b>${limits.perMinute} per minute</b>. Every request counts once, so a batch of ${MAX_VARIANTS} emblems costs the same as one.</p>`
+    : '<p>This server has rate limiting turned off.</p>'}
+  <p>Responses carry <code>RateLimit-Limit</code>, <code>RateLimit-Remaining</code> and <code>RateLimit-Reset</code> (seconds until the allowance is full again). Past the limit you get status 429 with <code>Retry-After</code> in seconds.</p>
+  <div class="callout">Ask for a whole batch in one call with <code>count</code>, and pin <code>v</code> so browsers and CDNs can cache images for good. Cached responses never reach the server, so they never count.</div>
+</section>
+
 <section id="errors">
   <h2>Errors</h2>
   <p>The JSON API answers bad requests with status 400 and a code you can switch on. The image routes answer with plain text.</p>
@@ -177,7 +187,9 @@ const src = \`\${EMBLAZON}/\${choice.theme}/\${encodeURIComponent(choice.input)}
     <tr><td><code>bad_count</code></td><td><code>count</code> is not a whole number from 1 to ${MAX_VARIANTS}.</td></tr>
     <tr><td><code>unknown_theme</code></td><td>No such theme.</td></tr>
     <tr><td><code>unknown_version</code></td><td>The theme has no such version.</td></tr>
+    <tr><td><code>bad_rim</code></td><td><code>rim</code> is not a hex colour or a CSS colour name.</td></tr>
     <tr><td><code>not_found</code></td><td>No such endpoint (status 404).</td></tr>
+    <tr><td><code>rate_limited</code></td><td>Too many requests (status 429). Wait <code>Retry-After</code> seconds. See <a href="#limits">Rate limits</a>.</td></tr>
   </tbody></table></div>
 </section>
 

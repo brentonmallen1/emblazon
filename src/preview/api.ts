@@ -1,4 +1,5 @@
 import { MAX_VARIANTS, THEMES, emblazonMany, type ThemeName } from '../index.ts';
+import { isColour } from './guard.ts';
 import { LOOKS } from './looks.ts';
 
 /** Longest input the JSON API accepts. Usernames, emails and UUIDs fit with room to spare. */
@@ -41,6 +42,7 @@ export function readRender(themeName: string, params: URLSearchParams): Parsed<R
   const size = sizeParam ? Math.min(1024, Math.max(16, Math.round(Number(sizeParam)) || 0)) : undefined;
   const backdrop = params.get('backdrop') === 'dark' ? ('dark' as const) : undefined;
   const rim = params.get('rim') ?? undefined;
+  if (rim !== undefined && !isColour(rim)) return fail('bad_rim', 'rim must be a hex colour such as #f0b060 or a CSS colour name');
   return { ok: true, value: { theme, version, size, backdrop, rim } };
 }
 
