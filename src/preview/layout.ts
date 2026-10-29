@@ -39,7 +39,7 @@ export function page(title: string, subtitle: string, body: string, script = '',
 </head>
 <body>
 <main>
-<nav><a href="/">Try it</a><a href="/picker">Hero symbol picker</a><a href="/sheet/heraldry">Contact sheet</a></nav>
+<nav><a href="/">Try it</a><a href="/picker">Hero symbol picker</a><a href="/sheet/heraldry">Heraldry sheet</a><a href="/sheet/patch">Patch sheet</a></nav>
 <h1>${escapeXml(title)}</h1>
 <p class="sub">${escapeXml(subtitle)}</p>
 ${body}
@@ -48,4 +48,14 @@ ${script ? `<script${module ? ' type="module"' : ''}>${script}</script>` : ''}
 </body>
 </html>
 `;
+}
+
+export const tile = (svg: string, caption: string): string => `<figure>${svg}<figcaption>${escapeXml(caption)}</figcaption></figure>`;
+export const cell = (svg: string): string => `<div class="cell">${svg}</div>`;
+export const row = (items: string[]): string => `<div class="row">${items.join('')}</div>`;
+export const section = (title: string, body: string): string => `<section><h2>${escapeXml(title)}</h2>${body}</section>`;
+
+export function matrix(heads: readonly string[], rows: string[]): string {
+  const head = ['<div></div>', ...heads.map((h) => `<div class="head">${escapeXml(h)}</div>`)].join('');
+  return `<div class="scroll"><div class="matrix" style="--cols:${heads.length}">${head}${rows.join('')}</div></div>`;
 }

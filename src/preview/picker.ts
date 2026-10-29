@@ -31,6 +31,11 @@ export function picker(): string {
     <label class="visually-hidden" for="hero">Hero name</label>
     <input id="hero" value="Wren Hollowmere" autocomplete="off" spellcheck="false" aria-label="Hero name">
     <button id="reroll" type="button">Other symbols</button>
+    <label class="visually-hidden" for="theme">Theme</label>
+    <select id="theme" aria-label="Theme" style="font: inherit; padding: 8px; border-radius: 8px; background: #0d0a07; color: #efe3cc; border: 1px solid #ffffff22">
+      <option value="heraldry">fantasy · coat of arms</option>
+      <option value="patch">deep space · mission patch</option>
+    </select>
   </div>
   <div class="opts" id="opts"></div>
   <p class="chosen" id="chosen">Tap a symbol to choose it.</p>
@@ -40,11 +45,16 @@ export function picker(): string {
   const script = `
 import { emblazonOptions, ATTRIBUTION } from '/lib/index.js';
 const $ = (id) => document.getElementById(id);
+// jb-rpg's fantasy and deep-space screens: background and accent.
+const LOOKS = { heraldry: { bg: '#1b120a', accent: '#d9a557' }, patch: { bg: '#0b0a1a', accent: '#9d4edd' } };
 let roll = 0;
 function deal() {
   const seed = 'demo-session:' + $('hero').value + (roll ? ':' + roll : '');
+  const theme = $('theme').value;
+  const look = LOOKS[theme];
+  document.querySelector('.stage').style.background = look.bg;
   const t0 = performance.now();
-  const options = emblazonOptions(seed, { count: 6, backdrop: 'dark', rim: '#d9a557' });
+  const options = emblazonOptions(seed, { theme, count: 6, backdrop: 'dark', rim: look.accent });
   const ms = (performance.now() - t0).toFixed(1);
   $('opts').innerHTML = '';
   for (const e of options) {
@@ -57,7 +67,7 @@ function deal() {
     b.addEventListener('click', () => {
       for (const o of $('opts').children) o.setAttribute('aria-pressed', String(o === b));
       $('chosen').innerHTML = 'Store: <code></code>';
-      $('chosen').querySelector('code').textContent = JSON.stringify({ input: e.input, version: e.version });
+      $('chosen').querySelector('code').textContent = JSON.stringify({ theme: e.theme, input: e.input, version: e.version });
     });
     $('opts').appendChild(b);
   }
@@ -65,6 +75,7 @@ function deal() {
 }
 $('hero').addEventListener('input', () => { roll = 0; deal(); });
 $('reroll').addEventListener('click', () => { roll++; deal(); });
+$('theme').addEventListener('change', () => { roll = 0; deal(); });
 $('credit').textContent = ATTRIBUTION;
 deal();`;
 

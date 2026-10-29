@@ -24,7 +24,7 @@ import {
   type Tincture,
 } from '../themes/heraldry/index.ts';
 import { emblazonOptions } from '../index.ts';
-import { page } from './layout.ts';
+import { cell, matrix, page, row, section, tile } from './layout.ts';
 
 /** Contact sheet: every procedural option, at a glance and at avatar sizes. */
 export function heraldrySheet(): string {
@@ -205,16 +205,8 @@ function generatedGrid(count: number): string {
 /** camelCase id → "per bend sinister". */
 const label = (id: string): string => id.replace(/[A-Z]/g, (c) => ` ${c.toLowerCase()}`);
 
-const tile = (svg: string, caption: string): string => `<figure>${svg}<figcaption>${escapeXml(caption)}</figcaption></figure>`;
-const cell = (svg: string): string => `<div class="cell">${svg}</div>`;
-const row = (items: string[]): string => `<div class="row">${items.join('')}</div>`;
-const section = (title: string, body: string): string => `<section><h2>${escapeXml(title)}</h2>${body}</section>`;
 
 function swatch(t: Tincture): string {
   return `<figure><div class="swatch" style="background:${TINCTURE_HEX[t]}"></div><figcaption>${tinctureName(t)} · ${isMetal(t) ? 'metal' : 'colour'}</figcaption></figure>`;
 }
 
-function matrix(heads: readonly string[], rows: string[]): string {
-  const head = ['<div></div>', ...heads.map((h) => `<div class="head">${escapeXml(h)}</div>`)].join('');
-  return `<div class="scroll"><div class="matrix" style="--cols:${heads.length}">${head}${rows.join('')}</div></div>`;
-}

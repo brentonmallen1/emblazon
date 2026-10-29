@@ -1,7 +1,7 @@
-import { HERALDRY_VERSION, HERALDRY_VERSIONS } from '../themes/heraldry/index.ts';
+import { THEMES } from '../index.ts';
 import { page } from './layout.ts';
 
-/** Type anything, see its arms. Talks to the same /heraldry routes an app would use. */
+/** Type anything, see its emblem in any theme. Talks to the same /{theme} routes an app would use. */
 export function playground(): string {
   const body = `
 <style>
@@ -16,14 +16,15 @@ export function playground(): string {
   details summary { cursor: pointer; color: var(--muted); font-size: 13px; }
 </style>
 <div class="try">
-  <img id="big" alt="Generated coat of arms">
+  <img id="big" alt="Generated emblem">
   <div>
     <label for="input" class="note">Any string: a username, email or UUID</label>
     <input id="input" value="brenton" autocomplete="off" spellcheck="false">
     <button id="random" type="button">Random</button>
-    <label class="note" style="margin-left: 12px">Version
-      <select id="version">${HERALDRY_VERSIONS.map((v) => `<option value="${v}"${v === HERALDRY_VERSION ? ' selected' : ''}>v${v}</option>`).join('')}</select>
+    <label class="note" style="margin-left: 12px">Theme
+      <select id="theme">${Object.keys(THEMES).map((t) => `<option value="${t}">${t}</option>`).join('')}</select>
     </label>
+    <label class="note" style="margin-left: 12px">Version <select id="version"></select></label>
     <p class="blazon" id="blazon"></p>
     <div class="sizes" id="sizes"></div>
     <details><summary>Config JSON</summary><pre id="json"></pre></details>
@@ -32,21 +33,29 @@ export function playground(): string {
 
   const script = `
 const $ = (id) => document.getElementById(id);
+const VERSIONS = ${JSON.stringify(Object.fromEntries(Object.entries(THEMES).map(([t, th]) => [t, { versions: th.versions, latest: th.latest }])))};
 let timer;
+function versions() {
+  const { versions, latest } = VERSIONS[$('theme').value];
+  $('version').innerHTML = versions.map((v) => '<option value="' + v + '"' + (v === latest ? ' selected' : '') + '>v' + v + '</option>').join('');
+}
 async function show(value) {
   const key = encodeURIComponent(value || ' ');
+  const base = '/' + $('theme').value + '/' + key;
   const v = '?v=' + $('version').value;
-  $('big').src = '/heraldry/' + key + '.svg' + v;
-  $('sizes').innerHTML = [32, 48, 64, 96].map((s) => '<img width="' + s + '" height="' + s + '" src="/heraldry/' + key + '.svg' + v + '&size=' + s + '" alt="">').join('');
-  const res = await fetch('/heraldry/' + key + '.json' + v);
+  $('big').src = base + '.svg' + v;
+  $('sizes').innerHTML = [32, 48, 64, 96].map((s) => '<img width="' + s + '" height="' + s + '" src="' + base + '.svg' + v + '&size=' + s + '" alt="">').join('');
+  const res = await fetch(base + '.json' + v);
   const data = await res.json();
   $('blazon').textContent = data.description;
   $('json').textContent = JSON.stringify(data.config, null, 2);
 }
 $('input').addEventListener('input', (e) => { clearTimeout(timer); timer = setTimeout(() => show(e.target.value), 120); });
 $('version').addEventListener('change', () => show($('input').value));
+$('theme').addEventListener('change', () => { versions(); show($('input').value); });
+versions();
 $('random').addEventListener('click', () => { const v = Math.random().toString(36).slice(2, 10); $('input').value = v; show(v); });
 show($('input').value);`;
 
-  return page('emblazon', 'Deterministic coats of arms from any string.', body, script);
+  return page('emblazon', 'Deterministic emblems from any string: coats of arms and mission patches.', body, script);
 }

@@ -1,4 +1,5 @@
 import { fnv1a } from '../../core/hash.ts';
+import { DEFAULT_RIM, type RenderOptions } from '../../core/render-options.ts';
 import { escapeXml, n } from '../../core/svg.ts';
 import type { Arms } from './arms.ts';
 import { CHARGES, type ChargeId, type Charges } from './charges.ts';
@@ -9,21 +10,7 @@ import { BORDURE_WIDTH, ordinaryPath, type Ordinary } from './ordinaries.ts';
 import { SHIELD_PATHS } from './shields.ts';
 import { COUNTERCHANGED, OUTLINE, TINCTURE_HEX, isFur, type Counterchanged, type Paint, type Tincture } from './tinctures.ts';
 
-export interface RenderOptions {
-  /** Pixel width/height attributes. Omit for a fluid SVG. */
-  size?: number;
-  /** 'shaded' adds a soft highlight and vignette over the field. */
-  finish?: 'flat' | 'shaded';
-  /**
-   * What the emblem will sit on. 'dark' adds a thin light rim outside the shield's dark outline,
-   * so the edge (and sable fields) stay visible on near-black screens.
-   */
-  backdrop?: 'light' | 'dark';
-  /** Rim colour for a dark backdrop, e.g. a theme's accent. Defaults to a warm off-white. */
-  rim?: string;
-}
-
-const DEFAULT_RIM = '#EDE6D6';
+export type { RenderOptions } from '../../core/render-options.ts';
 
 /** What layers need beyond their own config: the id prefix, the field, and a place to add defs. */
 interface Context {

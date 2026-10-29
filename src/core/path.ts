@@ -3,7 +3,7 @@
  * absolute commands, apply a uniform scale + translate, measure it, and serialise it again.
  * Uniform scaling keeps arcs and smooth-curve reflections valid without re-deriving them.
  */
-import { n } from '../../src/core/svg.ts';
+import { n } from './svg.ts';
 
 export interface Command {
   /** Absolute command: M L C S Q T A Z (H and V are converted to L). */

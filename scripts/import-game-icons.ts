@@ -5,7 +5,7 @@
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { escapeXml } from '../src/core/svg.ts';
-import { parsePath, pathBounds, serializePath, transformPath, type Command } from './lib/path.ts';
+import { parsePath, pathBounds, serializePath, transformPath, type Command } from '../src/core/path.ts';
 
 const VENDOR = 'assets/vendor/game-icons';
 const OUT = 'assets/heraldry/charges';

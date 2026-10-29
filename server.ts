@@ -1,12 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { createServer, type ServerResponse } from 'node:http';
 import { join } from 'node:path';
-import { emblazon } from './src/index.ts';
+import { THEMES, emblazon, type ThemeName } from './src/index.ts';
 import { heraldrySheet } from './src/preview/heraldry-sheet.ts';
+import { patchSheet } from './src/preview/patch-sheet.ts';
 import { picker } from './src/preview/picker.ts';
 import { playground } from './src/preview/playground.ts';
 import { toBrowserJs } from './scripts/lib/browser-js.ts';
-import { HERALDRY_VERSION, HERALDRY_VERSIONS } from './src/themes/heraldry/index.ts';
 
 const PORT = Number(process.env.PORT ?? 4747);
 
@@ -21,6 +21,7 @@ createServer((req, res) => {
 
   if (pathname === '/') return send(res, 200, 'text/html; charset=utf-8', playground());
   if (pathname === '/sheet/heraldry') return send(res, 200, 'text/html; charset=utf-8', heraldrySheet());
+  if (pathname === '/sheet/patch') return send(res, 200, 'text/html; charset=utf-8', patchSheet());
 
   if (pathname === '/picker') return send(res, 200, 'text/html; charset=utf-8', picker());
 
@@ -46,24 +47,28 @@ createServer((req, res) => {
     }
   }
 
-  // GET /heraldry/{input}.svg?size=&v=   and   GET /heraldry/{input}.json?v=
-  const m = pathname.match(/^\/heraldry\/(.+)\.(svg|json)$/);
-  if (m) {
+  // GET /{theme}/{input}.svg?size=&v=&backdrop=dark&rim=   and   GET /{theme}/{input}.json?v=
+  const m = pathname.match(/^\/(\w+)\/(.+)\.(svg|json)$/);
+  if (m && Object.hasOwn(THEMES, m[1])) {
+    const theme = m[1] as ThemeName;
     let input: string;
     try {
-      input = decodeURIComponent(m[1]);
+      input = decodeURIComponent(m[2]);
     } catch {
       return send(res, 400, 'text/plain; charset=utf-8', 'malformed input');
     }
-    const version = Number(searchParams.get('v') ?? HERALDRY_VERSION);
-    if (!HERALDRY_VERSIONS.includes(version)) return send(res, 400, 'text/plain; charset=utf-8', `unknown version; have ${HERALDRY_VERSIONS.join(', ')}`);
+    const { versions, latest } = THEMES[theme];
+    const version = Number(searchParams.get('v') ?? latest);
+    if (!versions.includes(version)) return send(res, 400, 'text/plain; charset=utf-8', `unknown ${theme} version; have ${versions.join(', ')}`);
     const sizeParam = searchParams.get('size');
     const size = sizeParam ? Math.min(1024, Math.max(16, Math.round(Number(sizeParam)) || 0)) : undefined;
+    const backdrop = searchParams.get('backdrop') === 'dark' ? 'dark' : undefined;
+    const rim = searchParams.get('rim') ?? undefined;
 
-    const emblem = emblazon(input, { version, size });
+    const emblem = emblazon(input, { theme, version, size, backdrop, rim });
     // Output is a pure function of the URL, so a pinned version can be cached forever.
     const cache = searchParams.has('v') ? 'public, max-age=31536000, immutable' : 'public, max-age=3600';
-    if (m[2] === 'svg') return send(res, 200, 'image/svg+xml', emblem.svg, cache);
+    if (m[3] === 'svg') return send(res, 200, 'image/svg+xml', emblem.svg, cache);
     const { svg: _svg, ...meta } = emblem;
     return send(res, 200, 'application/json', JSON.stringify(meta), cache);
   }

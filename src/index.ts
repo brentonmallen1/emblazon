@@ -1,70 +1,111 @@
-import {
-  HERALDRY_VERSION,
-  blazon,
-  creditsFor,
-  generateArms,
-  lookKey,
-  renderArms,
-  type Arms,
-  type RenderOptions,
-} from './themes/heraldry/index.ts';
+import type { RenderOptions } from './core/render-options.ts';
+import * as heraldryTheme from './themes/heraldry/index.ts';
+import * as patchTheme from './themes/patch/index.ts';
+import type { Theme } from './themes/theme.ts';
 
 export * as heraldry from './themes/heraldry/index.ts';
+export * as patch from './themes/patch/index.ts';
 export { ATTRIBUTION } from './themes/heraldry/index.ts';
+export type { RenderOptions } from './core/render-options.ts';
+export type { Theme } from './themes/theme.ts';
 
-export interface EmblazonOptions extends RenderOptions {
-  /** Theme version. Pin it if your app needs emblems that never change. */
+/** Each theme's config type, by name. */
+interface Configs {
+  heraldry: heraldryTheme.Arms;
+  patch: patchTheme.Patch;
+}
+export type ThemeName = keyof Configs;
+
+export const THEMES: { readonly [T in ThemeName]: Theme<Configs[T]> } = {
+  heraldry: {
+    versions: heraldryTheme.HERALDRY_VERSIONS,
+    latest: heraldryTheme.HERALDRY_VERSION,
+    generate: heraldryTheme.generateArms,
+    render: heraldryTheme.renderArms,
+    describe: heraldryTheme.blazon,
+    lookKey: heraldryTheme.lookKey,
+    motif: (arms) => arms.charges?.charge,
+    credits: heraldryTheme.creditsFor,
+  },
+  patch: {
+    versions: patchTheme.PATCH_VERSIONS,
+    latest: patchTheme.PATCH_VERSION,
+    generate: patchTheme.generatePatch,
+    render: patchTheme.renderPatch,
+    describe: patchTheme.describePatch,
+    lookKey: patchTheme.patchLookKey,
+    motif: patchTheme.patchMotif,
+    credits: () => [],
+  },
+};
+
+export interface EmblazonOptions<T extends ThemeName = ThemeName> extends RenderOptions {
+  /** Which kind of emblem (default 'heraldry'). */
+  theme?: T;
+  /** Theme version (default: the theme's latest). Pin it if emblems must never change. */
   version?: number;
 }
 
-export interface Emblem {
-  theme: 'heraldry';
-  version: number;
-  /** The string this emblem was generated from. Store it with `version` to get it back. */
-  input: string;
-  svg: string;
-  /** The generated configuration; store it to re-render later without the input. */
-  config: Arms;
-  /** Human-readable description (for heraldry, the blazon). */
-  description: string;
-  /** License credits for third-party art in this emblem, if any. */
-  credits: string[];
+/** One generated emblem. `config` narrows with `theme`. */
+export type Emblem<T extends ThemeName = ThemeName> = {
+  [K in T]: {
+    theme: K;
+    version: number;
+    /** The string this emblem was generated from. Store it with `theme` and `version`. */
+    input: string;
+    svg: string;
+    /** The generated configuration; store it to re-render later without the input. */
+    config: Configs[K];
+    /** Human-readable description: a blazon, or a mission name and scene. Never drawn. */
+    description: string;
+    /** License credits for third-party art in this emblem, if any. */
+    credits: string[];
+  };
+}[T];
+
+/** The emblem for any string: same input, theme and version, same emblem. */
+export function emblazon<T extends ThemeName = 'heraldry'>(input: string, { theme, version, ...render }: EmblazonOptions<T> = {}): Emblem<T> {
+  const name = (theme ?? 'heraldry') as T;
+  const t = THEMES[name] as unknown as Theme<Configs[T]>;
+  const v = version ?? t.latest;
+  return build(name, t, input, t.generate(input, v), v, render);
 }
 
-/** The emblem for any string: same input, same emblem. */
-export function emblazon(input: string, { version = HERALDRY_VERSION, ...render }: EmblazonOptions = {}): Emblem {
-  return build(input, generateArms(input, version), version, render);
-}
-
-export interface OptionsRequest extends EmblazonOptions {
+export interface OptionsRequest<T extends ThemeName = ThemeName> extends EmblazonOptions<T> {
   /** How many emblems to offer (default 6). */
   count?: number;
 }
 
 /**
- * A picker's worth of emblems from one seed, e.g. a game session plus the hero's name. Stable:
+ * A picker's worth of emblems from one seed, e.g. a game session plus a hero's name. Stable:
  * the same seed always offers the same emblems, in the same order. No two look alike, and the
- * charges differ where the set allows, so the choice feels like a real choice. Re-roll by
- * changing the seed (append a counter). Store the chosen emblem's `input` and `version`.
+ * main motif differs where the set allows, so the choice feels like a real choice. Re-roll by
+ * changing the seed (append a counter). Store the chosen emblem's `input`, `theme` and `version`.
  */
-export function emblazonOptions(seed: string, { count = 6, version = HERALDRY_VERSION, ...render }: OptionsRequest = {}): Emblem[] {
-  const picked: Emblem[] = [];
+export function emblazonOptions<T extends ThemeName = 'heraldry'>(
+  seed: string,
+  { count = 6, theme, version, ...render }: OptionsRequest<T> = {},
+): Emblem<T>[] {
+  const name = (theme ?? 'heraldry') as T;
+  const t = THEMES[name] as unknown as Theme<Configs[T]>;
+  const v = version ?? t.latest;
+  const picked: Emblem<T>[] = [];
   const looks = new Set<string>();
-  const charges = new Set<string>();
-  // Prefer a new charge each time; after a few misses, settle for a new look.
+  const motifs = new Set<string>();
+  // Prefer a new motif each time; after a few misses, settle for a new look.
   for (let i = 0; picked.length < count && i < count * 12; i++) {
     const input = `${seed}#${i}`;
-    const config = generateArms(input, version);
-    const look = lookKey(config);
-    const charge = config.charges?.charge;
-    if (looks.has(look) || (charge && charges.has(charge) && i < count * 4)) continue;
+    const config = t.generate(input, v);
+    const look = t.lookKey(config);
+    const motif = t.motif(config);
+    if (looks.has(look) || (motif && motifs.has(motif) && i < count * 4)) continue;
     looks.add(look);
-    if (charge) charges.add(charge);
-    picked.push(build(input, config, version, render));
+    if (motif) motifs.add(motif);
+    picked.push(build(name, t, input, config, v, render));
   }
   return picked;
 }
 
-function build(input: string, config: Arms, version: number, render: RenderOptions): Emblem {
-  return { theme: 'heraldry', version, input, svg: renderArms(config, render), config, description: blazon(config), credits: creditsFor(config) };
+function build<T extends ThemeName>(theme: T, t: Theme<Configs[T]>, input: string, config: Configs[T], version: number, render: RenderOptions): Emblem<T> {
+  return { theme, version, input, svg: t.render(config, render), config, description: t.describe(config), credits: t.credits(config) } as Emblem<T>;
 }

@@ -1,0 +1,26 @@
+# Git
+.git
+.gitignore
+
+# Generated
+dist
+out
+node_modules
+
+# Not needed at runtime: tests, asset sources, docs, tooling
+test
+assets/vendor
+assets/heraldry
+docs
+*.md
+!assets/CREDITS.md
+.claude
+justfile
+tsconfig*.json
+
+# Docker files
+docker-compose.yml
+.env*
+
+# OS
+.DS_Store

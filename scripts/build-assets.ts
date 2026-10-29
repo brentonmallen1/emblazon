@@ -6,7 +6,7 @@
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { n } from '../src/core/svg.ts';
-import { parsePath, pathBounds } from './lib/path.ts';
+import { parsePath, pathBounds } from '../src/core/path.ts';
 
 export const SRC_DIR = 'assets/heraldry/charges';
 export const OUT_FILE = 'src/themes/heraldry/charges.generated.ts';

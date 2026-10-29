@@ -7,9 +7,11 @@ Deterministic, themed avatar generator in the spirit of Robohash. Any input stri
 username, UUID) always produces the same emblem. Themes are **coats of arms** first, **mission
 patches** second, more later. Emblems are imagery only: no text inside them.
 
-Status: **Phase 5 done** — the library runs in the browser (pure-JS SHA-256, no `node:`
-imports, passes a strict browser type-check), offers `emblazonOptions()` for pickers, renders a
-rim for dark screens, and carries attribution. Next: Phase 6 (mission patches).
+Status: **Phase 6 in progress** — a `patch` theme works end to end (procedural planets,
+parametric craft, picker, sheet at `/sheet/patch`) but is **not released or frozen**: its style
+is waiting on §8.8 (jb-rpg's own symbol mock-ups are flatter and use names/initials), and it
+measures 1 in ~5,400 lookalike pairs against the 1 in 10,000 target. Project tooling (justfile,
+Docker, `.env.example`) is in place.
 
 ---
 
@@ -266,7 +268,7 @@ fixed by re-weighting before release.
 | Border | 4–6: single, double, stitched, beaded | procedural; no text ring (emblems are imagery only) |
 | Background | 6–10: deep space gradient, starfield, nebula, horizon | procedural, seeded |
 | Celestial body | 10–15: Earth limb, Moon, Mars, ringed giant, gas giant, ice world | procedural (turbulence bands, craters, rings, terminator) |
-| Vehicle | ~2,000 combos | assembled from ~25 drawn parts: noses, bodies, fins, boosters, plumes; + capsules, landers, satellites; + 3–5 hero pieces (shuttle, rover) |
+| Vehicle | 6 kinds | parametric code, no assets: rockets (nose × fins × boosters × stages × flame), capsule, lander, rover, satellite, probe. The top-down shuttle was dropped: it read badly |
 | Trajectory | 6–10 | seeded Bézier swooshes / orbit ellipses, tapered |
 | Accents | ~10 | crew stars (count = crew), flag stripes, constellation, astronaut silhouette |
 | Palette | 10–15 | data |
@@ -340,3 +342,9 @@ potrace + manual cleanup. All non-original assets recorded in `assets/CREDITS.md
 5. **Raster output:** is SVG-only fine for the first deploy?
 6. **Deploy target:** self-hosted Docker (e.g. Unraid) vs. a static/edge function.
 7. **License** for code and original art (e.g. MIT code + CC BY art).
+8. **Style direction per theme.** jb-rpg's mock-ups (fantasy shield, deep-space patch, cyberpunk
+   crew tag, horror sigil, insanity spiral) are flat and minimal: two or three colours, thin line
+   work in the theme accent, and some carry the hero's name or initials (name ring on the patch,
+   "W/A" + code on the crew tag). emblazon's heraldry and patches are richer illustrations with
+   no text. Options: match the mock-ups' flat style, keep the illustrated style, or offer both as
+   a `style` option. And: is text (names, initials) allowed in some themes?
