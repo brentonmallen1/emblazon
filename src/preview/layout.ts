@@ -15,7 +15,7 @@ export function page(title: string, subtitle: string, body: string, script = '',
   body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.45 ui-sans-serif, system-ui, -apple-system, sans-serif; }
   main { max-width: 1180px; margin: 0 auto; padding: 32px 16px 96px; }
   h1 { font-size: 22px; margin: 0; letter-spacing: -0.01em; }
-  nav { display: flex; gap: 16px; font-size: 13px; margin-bottom: 20px; }
+  nav { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13px; margin-bottom: 20px; color: var(--muted); }
   nav a { color: var(--muted); }
   .sub, .note { color: var(--muted); margin: 4px 0 0; }
   .note { margin: 0 0 12px; font-size: 13px; }
@@ -39,7 +39,7 @@ export function page(title: string, subtitle: string, body: string, script = '',
 </head>
 <body>
 <main>
-<nav><a href="/">Try it</a><a href="/picker">Hero symbol picker</a><a href="/sheet/heraldry">Heraldry sheet</a><a href="/sheet/patch">Patch sheet</a></nav>
+<nav><a href="/">Try it</a><a href="/picker">Hero symbol picker</a><span>Sheets:</span><a href="/sheet/heraldry">heraldry</a><a href="/sheet/patch">patch</a><a href="/sheet/insignia">insignia</a><a href="/sheet/sigil">sigil</a><a href="/sheet/mark">mark</a><a href="/sheet/badge">badge</a></nav>
 <h1>${escapeXml(title)}</h1>
 <p class="sub">${escapeXml(subtitle)}</p>
 ${body}

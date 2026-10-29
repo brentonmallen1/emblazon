@@ -15,7 +15,7 @@ export interface Patch {
   name: string;
 }
 
-export const SHAPES = ['circle', 'oval', 'shield', 'hexagon', 'octagon', 'square'] as const;
+export const SHAPES = ['circle', 'oval', 'shield', 'hexagon', 'octagon', 'square', 'triangle', 'triangleDown'] as const;
 export type PatchShape = (typeof SHAPES)[number];
 
 export const BORDERS = ['single', 'double', 'stitched', 'beaded'] as const;
@@ -39,10 +39,24 @@ export type Vehicle =
   | { kind: 'lander' }
   | { kind: 'satellite'; panels: 'wings' | 'quad' }
   | { kind: 'rover' }
-  | { kind: 'probe'; booms: 2 | 3 };
+  | { kind: 'probe'; booms: 2 | 3 }
+  // v2 centrepieces. A garden or an orbit scene brings its own small world, so it has no body.
+  | { kind: 'starship'; wings: 'delta' | 'swept' | 'dart'; engines: 1 | 2 | 3 }
+  | { kind: 'station'; panels: 'top' | 'both' | 'none'; spokes: 2 | 4 }
+  | { kind: 'garden'; plant: Plant; world: WorldTone }
+  | { kind: 'orbits'; rings: 2 | 3; moons: 0 | 1 | 2; bands: boolean; world: WorldTone };
 
 export type VehicleKind = Vehicle['kind'];
-export const VEHICLES: readonly VehicleKind[] = ['rocket', 'capsule', 'lander', 'rover', 'satellite', 'probe'];
+export const VEHICLES: readonly VehicleKind[] = ['rocket', 'capsule', 'lander', 'rover', 'satellite', 'probe', 'starship', 'station', 'garden', 'orbits'];
+
+export const PLANTS = ['sprout', 'sapling', 'flower', 'fern'] as const;
+export type Plant = (typeof PLANTS)[number];
+
+export const WORLD_TONES = ['ash', 'rust', 'ocean', 'sand', 'ochre', 'frost'] as const;
+export type WorldTone = (typeof WORLD_TONES)[number];
+
+/** Centrepieces that draw their own world, in canvas coordinates, instead of a placed craft. */
+export const SCENES: readonly VehicleKind[] = ['garden', 'orbits'];
 
 /** Craft that stand on a surface rather than fly: they need a Moon, Mars or desert horizon under them. */
 export const SURFACE_CRAFT: readonly VehicleKind[] = ['lander', 'rover'];

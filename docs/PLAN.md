@@ -7,11 +7,14 @@ Deterministic, themed avatar generator in the spirit of Robohash. Any input stri
 username, UUID) always produces the same emblem. Themes are **coats of arms** first, **mission
 patches** second, more later. Emblems are imagery only: no text inside them.
 
-Status: **Phase 6 done** — all themes take jb-rpg's flat look (§8.8): `heraldry@3` (default) is
-v2's rules drawn flat in muted tinctures with a cream rim; `patch@1` is a flat mission patch
-(accent rings, dark band, flat scene, light craft silhouettes). heraldry v1–v2 keep their
-classic look byte-for-byte. Lookalike chance per pair: heraldry 1 in ~51,700, patch 1 in
-~11,400. Next: Phase 7 (insignia, seal, sigil, badge) in the same flat style.
+Status: **Phase 7 done** — all six jb-rpg themes generate, each from the
+directions picked on the samples canvas (§9): `insignia` (hazard tag, neon tag, corp stamp, with
+real letters), `sigil` (watching seal, wax seal, thorned rune), `mark` (idol, tablet, forbidden
+book), `badge` (flat badge, sticker), and `patch@2` (triangle frames; starship, ring station,
+garden dome and orbit scenes in place of the rocket). heraldry v1–v3 and patch v1 are unchanged
+byte-for-byte. Lookalike chance per pair: heraldry 1 in ~46,900, patch@2 1 in ~23,300,
+insignia 1 in ~56,400, sigil 1 in ~13,900, mark 1 in ~188,700, badge 1 in ~32,300. Every released
+version's corpus is frozen by digest. Next: Phase 8 (packaging).
 
 ---
 
@@ -26,11 +29,11 @@ Cinematic Redesign" design canvas): dark, cinematic, one accent palette per them
 | Theme (jb-rpg name) | Symbol style | emblazon theme | Status |
 |---|---|---|---|
 | fantasy | coat of arms | `heraldry` | ✅ v2 |
-| deep_space | mission patch | `patch` | Phase 6 |
-| cyberpunk | corp / crew insignia: hard geometry, glyph marks, neon on black | `insignia` | Phase 7 |
-| horror | occult seal: wax-seal or ring of marks around a creature (raven, moth, tick…) | `seal` | Phase 7 |
-| insanity | eldritch sigil: radial, asymmetric, tentacles and eyes | `sigil` | Phase 7 |
-| modern | badge / patch: roundel or shield badge with a simple mark | `badge` | Phase 7 |
+| deep_space | mission patch: no text, round or triangle frames | `patch` | ✅ v2 |
+| cyberpunk | crew tag: hazard tag, neon tag or corp stamp, with letters and numbers | `insignia` | ✅ v1 |
+| horror | occult seal: watching seal, wax seal or thorned rune | `sigil` | ✅ v1 |
+| insanity | Arkham-style relic: an idol, a carved tablet or a forbidden book | `mark` | ✅ v1 |
+| modern | flat badge or die-cut sticker | `badge` | ✅ v1 |
 
 What an app like that needs from the package (Phase 5 delivered these):
 - **Runs in the browser** as well as Node: no `node:` imports, synchronous hashing.
@@ -347,3 +350,21 @@ potrace + manual cleanup. All non-original assets recorded in `assets/CREDITS.md
    `style` render option can still ask for `classic` heraldry. Still open: **text** — the
    mock-ups put the hero's name on the patch ring and initials on the cyberpunk tag; emblazon
    draws no text yet. Would need the name passed in (it isn't the seed) and fonts as paths.
+---
+
+## 9. Direction picks (samples canvas, 2026-10-28)
+
+Sample designs: https://claude.ai/artifact/7QGj58L2K7oWrMLtHq9HCN (private canvas).
+
+- **Cyberpunk (`insignia`):** all three directions become sub-styles, picked per hero for variety:
+  hazard tag (neon fill, big initials, barcode, serial), neon outline (dark tag, glowing outlined
+  letters, corner brackets, pixel code), corp stamp (neon frame, initials, vertical barcode,
+  hazard band). Real letters and numbers (initials from the hero's name, serials), drawn with
+  the built-in stroke font.
+- **Horror (`sigil`):** all three as sub-styles: watching seal (line art), wax seal (filled,
+  embossed motif, drips), thorned rune.
+- **Insanity:** the first three samples missed — needs Lovecraftian / elder-god vibes. Second
+  round in progress: tentacles from a void, an elder-sign-like branching star, a cosmic maw.
+- **Modern (`badge`):** flat badge and sticker as sub-styles; the monoline monogram is dropped.
+- **Deep space (`patch`):** no text. Add triangular frames. Better interiors: futuristic craft
+  (not the current rocket), orbits, plants, satellites/stations.

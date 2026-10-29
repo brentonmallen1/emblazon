@@ -17,6 +17,11 @@ export interface RenderOptions {
    * released with, so pinned versions never change.
    */
   style?: 'flat' | 'classic';
+  /**
+   * Gentle built-in motion (CSS inside the SVG, paused under prefers-reduced-motion) for themes
+   * that have it, e.g. the insanity mark. Off by default; static renderers show the still frame.
+   */
+  animate?: boolean;
 }
 
 export const DEFAULT_RIM = '#EDE6D6';

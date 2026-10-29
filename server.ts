@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { THEMES, emblazon, type ThemeName } from './src/index.ts';
 import { heraldrySheet } from './src/preview/heraldry-sheet.ts';
 import { patchSheet } from './src/preview/patch-sheet.ts';
+import { themeSheet } from './src/preview/theme-sheet.ts';
 import { picker } from './src/preview/picker.ts';
 import { playground } from './src/preview/playground.ts';
 import { toBrowserJs } from './scripts/lib/browser-js.ts';
@@ -22,6 +23,8 @@ createServer((req, res) => {
   if (pathname === '/') return send(res, 200, 'text/html; charset=utf-8', playground());
   if (pathname === '/sheet/heraldry') return send(res, 200, 'text/html; charset=utf-8', heraldrySheet(searchParams.get('style') === 'classic' ? 'classic' : 'flat'));
   if (pathname === '/sheet/patch') return send(res, 200, 'text/html; charset=utf-8', patchSheet());
+  const sheet = pathname.match(/^\/sheet\/(\w+)$/);
+  if (sheet && Object.hasOwn(THEMES, sheet[1])) return send(res, 200, 'text/html; charset=utf-8', themeSheet(sheet[1] as ThemeName));
 
   if (pathname === '/picker') return send(res, 200, 'text/html; charset=utf-8', picker());
 

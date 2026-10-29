@@ -47,7 +47,35 @@ const SHAPE_PATHS: Readonly<Record<PatchShape, string>> = {
   hexagon: 'M120 8L217 64V176L120 232L23 176V64Z',
   octagon: 'M77.1 16.5H162.9L223.5 77.1V162.9L162.9 223.5H77.1L16.5 162.9V77.1Z',
   square: 'M42 14H198Q226 14 226 42V198Q226 226 198 226H42Q14 226 14 198V42Q14 14 42 14Z',
+  triangle: 'M120 16L228 206H12Z',
+  triangleDown: 'M120 224L228 34H12Z',
 };
+
+/** Inradius of the triangles: insets scale about the incentre so the band is even all round. */
+const TRI_R = (216 * 190) / (216 + 2 * Math.hypot(108, 190));
+
+/** Centre and reach each shape is scaled about. Round shapes use the canvas centre. */
+const PIVOT: Readonly<Partial<Record<PatchShape, readonly [number, number, number]>>> = {
+  triangle: [CENTER, 206 - TRI_R, TRI_R],
+  triangleDown: [CENTER, 34 + TRI_R, TRI_R],
+};
+
+/** Triangles have a narrow band: a full one would leave little room inside. */
+export const bandFor = (shape: PatchShape): number => (PIVOT[shape] ? 14 : BAND);
+
+/** True for frames whose scene is drawn smaller, about the incentre (see sceneTransform). */
+export const isTriangle = (shape: PatchShape): boolean => PIVOT[shape] !== undefined;
+
+/**
+ * Where a triangle's scene goes: the round-frame scene scaled about the inner incircle. Empty for
+ * other shapes, whose scene is drawn as is.
+ */
+export function sceneTransform(shape: PatchShape): string {
+  const pivot = PIVOT[shape];
+  if (!pivot) return '';
+  const k = ((pivot[2] - bandFor(shape)) / (REACH - BAND)) * 1.22;
+  return `translate(${n(pivot[0])} ${n(pivot[1])}) scale(${n(k)}) translate(${-CENTER} ${-CENTER})`;
+}
 
 /** Half-width and half-height of each shape about the centre, for placing marks in the band. */
 const EXTENT: Readonly<Record<PatchShape, readonly [number, number]>> = {
@@ -57,6 +85,9 @@ const EXTENT: Readonly<Record<PatchShape, readonly [number, number]>> = {
   hexagon: [97, 112],
   octagon: [103.5, 103.5],
   square: [106, 106],
+  // Triangles carry no marks in the band; these only keep the table complete.
+  triangle: [108, 95],
+  triangleDown: [108, 95],
 };
 
 /** Shapes with a flat top edge, and where it sits: crew stars run along it in a straight row. */
@@ -69,8 +100,9 @@ export function shapePath(shape: PatchShape, inset = 0): string {
   const key = `${shape}:${inset}`;
   let d = cache.get(key);
   if (!d) {
-    const k = (REACH - inset) / REACH;
-    d = inset === 0 ? SHAPE_PATHS[shape] : serializePath(transformPath(parsePath(SHAPE_PATHS[shape]), k, CENTER * (1 - k), CENTER * (1 - k)));
+    const [px, py, reach] = PIVOT[shape] ?? [CENTER, CENTER, REACH];
+    const k = (reach - inset) / reach;
+    d = inset === 0 ? SHAPE_PATHS[shape] : serializePath(transformPath(parsePath(SHAPE_PATHS[shape]), k, px * (1 - k), py * (1 - k)));
     cache.set(key, d);
   }
   return d;
@@ -91,7 +123,7 @@ export function frameLayer(shape: PatchShape, style: BorderStyle, palette: Patch
   const ring = (inset: number, width: number, extra = '') =>
     `<path d="${shapePath(shape, inset)}" fill="none" stroke="${palette.accent}" stroke-width="${width}"${extra}/>`;
   const under = `<path d="${shapePath(shape)}" fill="${palette.band}"/>`;
-  let over = ring(BAND, 2.5);
+  let over = ring(bandFor(shape), 2.5);
   switch (style) {
     case 'single':
       over += ring(2, 4);
@@ -107,7 +139,7 @@ export function frameLayer(shape: PatchShape, style: BorderStyle, palette: Patch
       break;
   }
   // Two small separator dots at the band's sides, as on stitched mission patches.
-  for (const a of [Math.PI, 0]) {
+  if (!isTriangle(shape)) for (const a of [Math.PI, 0]) {
     const [x, y] = bandPoint(shape, a);
     over += `<circle cx="${n(x)}" cy="${n(y)}" r="2.4" fill="${palette.accent}"/>`;
   }

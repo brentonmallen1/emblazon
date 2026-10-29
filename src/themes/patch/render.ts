@@ -3,9 +3,10 @@ import { DEFAULT_RIM, type RenderOptions } from '../../core/render-options.ts';
 import { escapeXml, n } from '../../core/svg.ts';
 import { bodyLayers } from './bodies.ts';
 import { crewStars, orbit, skyAccents, swoosh } from './extras.ts';
-import { BAND, CANVAS, PALETTES, frameLayer, shapePath } from './frame.ts';
+import { CANVAS, PALETTES, bandFor, frameLayer, sceneTransform, shapePath } from './frame.ts';
+import { sceneArt } from './scenes.ts';
 import { skyLayer } from './sky.ts';
-import { SURFACE_CRAFT, type Patch } from './types.ts';
+import { SCENES, SURFACE_CRAFT, type Patch } from './types.ts';
 import { vehicleArt, vehicleBox } from './vehicles.ts';
 
 /** Longest side a craft is scaled to, in canvas units. */
@@ -38,27 +39,30 @@ export function renderPatch(p: Patch, { size, backdrop = 'light', rim = DEFAULT_
   const id = `pt${fnv1a(JSON.stringify(p))}`;
   const palette = PALETTES[p.palette];
   const outer = shapePath(p.shape);
-  const inner = shapePath(p.shape, BAND);
+  const inner = shapePath(p.shape, bandFor(p.shape));
   const frame = frameLayer(p.shape, p.border, palette);
 
   const body = p.body && bodyLayers(p.body.kind, p.body.placement, p.body.seed, id, palette.thread);
   const at = vehiclePlacement(p);
   const box = vehicleBox(p.vehicle);
-  const vehicle =
-    `<g transform="translate(${n(at.x)} ${n(at.y)}) rotate(${p.angle}) scale(${n(at.scale)}) translate(0 ${n(-(box.top + box.bottom) / 2)})">` +
+  const vehicle = SCENES.includes(p.vehicle.kind)
+    ? sceneArt(p.vehicle, palette)
+    : `<g transform="translate(${n(at.x)} ${n(at.y)}) rotate(${p.angle}) scale(${n(at.scale)}) translate(0 ${n(-(box.top + box.bottom) / 2)})">` +
     vehicleArt(p.vehicle, palette) +
     `</g>`;
   const path = p.trajectory?.kind === 'orbit' ? orbit(palette, at.x, at.y, p.trajectory.flip, id) : undefined;
   const freeSide = p.body?.placement === 'left' ? 'right' : p.body?.placement === 'right' ? 'left' : 'both';
 
-  const art =
-    skyLayer(p.sky, palette) +
+  const scene =
     skyAccents(p.accents, palette, freeSide) +
     (body ? body.back + body.front : '') +
     (p.trajectory?.kind === 'swoosh' ? swoosh(palette, p.trajectory.flip) : '') +
     (path?.back ?? '') +
     vehicle +
     (path?.front ?? '');
+  // Triangles draw the round-frame scene smaller, centred in the triangle; the sky stays full size.
+  const fit = sceneTransform(p.shape);
+  const art = skyLayer(p.sky, palette) + (fit ? `<g transform="${fit}">${scene}</g>` : scene);
 
   const dims = size ? ` width="${size}" height="${size}"` : '';
   return (

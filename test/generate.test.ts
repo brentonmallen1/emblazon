@@ -48,6 +48,11 @@ const FROZEN: [theme: ThemeName, version: number, sha256: string][] = [
   ['heraldry', 2, 'd0302e3f70d47e4c5dab295ac1a9793daac6e7e55ae1eb2bfa78eb575c0ff2d3'],
   ['heraldry', 3, '9f54b7f3537e02299edcfa14175868dde9116f23ee63eee8adf4dc5575cab2b5'],
   ['patch', 1, 'dc436d74bd0b6a03709ed2b51052346cd4567e8879655696471c54c0c6cc776b'],
+  ['patch', 2, 'f7b2445cec0fd4f0eacce8bd20c8b7d2de4b6e76faa58165884fbefee2102b40'],
+  ['insignia', 1, '0680ac292273579910d28e5d0db5fe5b56dd2c52502636eb76b90aba1b76b9df'],
+  ['sigil', 1, 'bdd752091c9a2d9665ec32d966798d5ae34e1cda063652b1da0b9d6587a8f85e'],
+  ['mark', 1, '354e1b6e5d1ab4cc18abfc30d137cdee595440849dc4b80d8d971251cbb2f250'],
+  ['badge', 1, 'cb9cfb17f6d96f042116428ed8db69e9655d25a705f4297d150ac0dbfc0e5e2f'],
 ];
 
 for (const [theme, version, digest] of FROZEN) {

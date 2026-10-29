@@ -4,8 +4,10 @@ import {
   BORDERS,
   PALETTE_IDS,
   PATCH_VERSION,
+  SCENES,
   SHAPES,
   describePatch,
+  isTriangle,
   generatePatch,
   renderPatch,
   type Patch,
@@ -20,7 +22,7 @@ const BASE: Patch = {
   palette: 'amber',
   sky: { seed: 7, stars: 18 },
   body: { kind: 'earth', placement: 'horizon', seed: 3 },
-  vehicle: { kind: 'rocket', nose: 'ogive', fins: 'delta', boosters: false, stages: 2, flame: true },
+  vehicle: { kind: 'starship', wings: 'delta', engines: 2 },
   angle: 18,
   accents: { crew: 3, moon: false, constellation: false, seed: 1 },
   name: 'Sheet',
@@ -34,7 +36,7 @@ export function patchSheet(): string {
     'emblazon · mission patches',
     'Contact sheet: frames, palettes, planets, craft, trajectories and accents, then generated patches.',
     [
-      section('Shapes × borders', matrix(BORDERS, SHAPES.map((shape) => `<div class="rowlabel">${shape}</div>` + BORDERS.map((border) => cell(renderPatch(with_({ shape, border }), { size: 96 }))).join('')))),
+      section('Shapes × borders', matrix(BORDERS, SHAPES.map((shape) => `<div class="rowlabel">${shape}</div>` + BORDERS.map((border) => cell(renderPatch(with_({ shape, border, accents: { ...BASE.accents, crew: isTriangle(shape) ? 0 : 3 } }), { size: 96 }))).join('')))),
       section('Palettes', row(PALETTE_IDS.map((palette) => show(with_({ palette }), palette)))),
       section(
         'Planets',
@@ -45,7 +47,7 @@ export function patchSheet(): string {
           ]),
         ),
       ),
-      section('Craft', row(VEHICLES_SHOWN.map(([vehicle, caption]) => show(with_({ vehicle, angle: vehicle.kind === 'lander' || vehicle.kind === 'rover' ? 0 : 14, body: vehicle.kind === 'lander' || vehicle.kind === 'rover' ? { kind: 'moon', placement: 'horizon', seed: 5 } : BASE.body }), caption)))),
+      section('Craft and scenes', row(VEHICLES_SHOWN.map(([vehicle, caption]) => show(craft(vehicle), caption)))),
       section(
         'Trajectories and accents',
         row([
@@ -62,7 +64,25 @@ export function patchSheet(): string {
   );
 }
 
+/** A craft on the base patch: landers on the Moon, scenes on their own world, the rest flying. */
+function craft(vehicle: Vehicle): Patch {
+  if (vehicle.kind === 'lander' || vehicle.kind === 'rover') return with_({ vehicle, angle: 0, body: { kind: 'moon', placement: 'horizon', seed: 5 } });
+  if (SCENES.includes(vehicle.kind)) return with_({ vehicle, angle: 0, body: undefined });
+  return with_({ vehicle, angle: vehicle.kind === 'station' ? 8 : 14 });
+}
+
 const VEHICLES_SHOWN: readonly [Vehicle, string][] = [
+  [{ kind: 'starship', wings: 'delta', engines: 2 }, 'starship · delta'],
+  [{ kind: 'starship', wings: 'swept', engines: 3 }, 'starship · swept, 3 engines'],
+  [{ kind: 'starship', wings: 'dart', engines: 1 }, 'starship · dart'],
+  [{ kind: 'station', panels: 'top', spokes: 2 }, 'ring station'],
+  [{ kind: 'station', panels: 'both', spokes: 4 }, 'ring station · 4 spokes'],
+  [{ kind: 'garden', plant: 'sprout', world: 'frost' }, 'garden · sprout'],
+  [{ kind: 'garden', plant: 'flower', world: 'ocean' }, 'garden · flower'],
+  [{ kind: 'garden', plant: 'fern', world: 'sand' }, 'garden · fern'],
+  [{ kind: 'orbits', rings: 2, moons: 1, bands: true, world: 'ochre' }, 'orbits · 2 rings'],
+  [{ kind: 'orbits', rings: 3, moons: 2, bands: false, world: 'rust' }, 'orbits · 3 rings, 2 moons'],
+  // The rocket: v1 only.
   [{ kind: 'rocket', nose: 'cone', fins: 'delta', boosters: false, stages: 1, flame: true }, 'rocket · cone, delta'],
   [{ kind: 'rocket', nose: 'ogive', fins: 'swept', boosters: true, stages: 2, flame: true }, 'rocket · boosters'],
   [{ kind: 'rocket', nose: 'capsule', fins: 'none', boosters: false, stages: 3, flame: false }, 'rocket · capsule, 3 stages'],

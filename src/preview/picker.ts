@@ -1,4 +1,5 @@
 import { page } from './layout.ts';
+import { LOOKS } from './looks.ts';
 
 /**
  * A jb-rpg-style "choose your hero's symbol" picker. Everything below runs in the browser: the
@@ -33,8 +34,7 @@ export function picker(): string {
     <button id="reroll" type="button">Other symbols</button>
     <label class="visually-hidden" for="theme">Theme</label>
     <select id="theme" aria-label="Theme" style="font: inherit; padding: 8px; border-radius: 8px; background: #0d0a07; color: #efe3cc; border: 1px solid #ffffff22">
-      <option value="heraldry">fantasy · coat of arms</option>
-      <option value="patch">deep space · mission patch</option>
+      ${Object.entries(LOOKS).map(([t, l]) => `<option value="${t}">${l.label}</option>`).join('')}
     </select>
   </div>
   <div class="opts" id="opts"></div>
@@ -45,8 +45,8 @@ export function picker(): string {
   const script = `
 import { emblazonOptions, ATTRIBUTION } from '/lib/index.js';
 const $ = (id) => document.getElementById(id);
-// jb-rpg's fantasy and deep-space screens: background and accent.
-const LOOKS = { heraldry: { bg: '#1b120a', accent: '#d9a557' }, patch: { bg: '#0b0a1a', accent: '#9d4edd' } };
+// jb-rpg's screen for each theme: background and accent.
+const LOOKS = ${JSON.stringify(LOOKS)};
 let roll = 0;
 function deal() {
   const seed = 'demo-session:' + $('hero').value + (roll ? ':' + roll : '');
@@ -54,7 +54,7 @@ function deal() {
   const look = LOOKS[theme];
   document.querySelector('.stage').style.background = look.bg;
   const t0 = performance.now();
-  const options = emblazonOptions(seed, { theme, count: 6, backdrop: 'dark', rim: look.accent });
+  const options = emblazonOptions(seed, { theme, count: 6, backdrop: 'dark', rim: look.accent, animate: theme === 'mark' });
   const ms = (performance.now() - t0).toFixed(1);
   $('opts').innerHTML = '';
   for (const e of options) {

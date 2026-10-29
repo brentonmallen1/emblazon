@@ -1,10 +1,18 @@
 import type { RenderOptions } from './core/render-options.ts';
 import * as heraldryTheme from './themes/heraldry/index.ts';
+import * as badgeTheme from './themes/badge/index.ts';
+import * as insigniaTheme from './themes/insignia/index.ts';
+import * as markTheme from './themes/mark/index.ts';
 import * as patchTheme from './themes/patch/index.ts';
+import * as sigilTheme from './themes/sigil/index.ts';
 import type { Theme } from './themes/theme.ts';
 
 export * as heraldry from './themes/heraldry/index.ts';
 export * as patch from './themes/patch/index.ts';
+export * as insignia from './themes/insignia/index.ts';
+export * as sigil from './themes/sigil/index.ts';
+export * as mark from './themes/mark/index.ts';
+export * as badge from './themes/badge/index.ts';
 export { ATTRIBUTION } from './themes/heraldry/index.ts';
 export type { RenderOptions } from './core/render-options.ts';
 export type { Theme } from './themes/theme.ts';
@@ -13,6 +21,10 @@ export type { Theme } from './themes/theme.ts';
 interface Configs {
   heraldry: heraldryTheme.Arms;
   patch: patchTheme.Patch;
+  insignia: insigniaTheme.Insignia;
+  sigil: sigilTheme.Sigil;
+  mark: markTheme.Mark;
+  badge: badgeTheme.Badge;
 }
 export type ThemeName = keyof Configs;
 
@@ -36,6 +48,50 @@ export const THEMES: { readonly [T in ThemeName]: Theme<Configs[T]> } = {
     describe: patchTheme.describePatch,
     lookKey: patchTheme.patchLookKey,
     motif: patchTheme.patchMotif,
+    credits: () => [],
+    styleFor: () => 'flat',
+  },
+  insignia: {
+    versions: insigniaTheme.INSIGNIA_VERSIONS,
+    latest: insigniaTheme.INSIGNIA_VERSION,
+    generate: insigniaTheme.generateInsignia,
+    render: insigniaTheme.renderInsignia,
+    describe: insigniaTheme.describeInsignia,
+    lookKey: insigniaTheme.insigniaLookKey,
+    motif: insigniaTheme.insigniaMotif,
+    credits: () => [],
+    styleFor: () => 'flat',
+  },
+  sigil: {
+    versions: sigilTheme.SIGIL_VERSIONS,
+    latest: sigilTheme.SIGIL_VERSION,
+    generate: sigilTheme.generateSigil,
+    render: sigilTheme.renderSigil,
+    describe: sigilTheme.describeSigil,
+    lookKey: sigilTheme.sigilLookKey,
+    motif: sigilTheme.sigilMotif,
+    credits: sigilTheme.sigilCredits,
+    styleFor: () => 'flat',
+  },
+  mark: {
+    versions: markTheme.MARK_VERSIONS,
+    latest: markTheme.MARK_VERSION,
+    generate: markTheme.generateMark,
+    render: markTheme.renderMark,
+    describe: markTheme.describeMark,
+    lookKey: markTheme.markLookKey,
+    motif: markTheme.markMotif,
+    credits: () => [],
+    styleFor: () => 'flat',
+  },
+  badge: {
+    versions: badgeTheme.BADGE_VERSIONS,
+    latest: badgeTheme.BADGE_VERSION,
+    generate: badgeTheme.generateBadge,
+    render: badgeTheme.renderBadge,
+    describe: badgeTheme.describeBadge,
+    lookKey: badgeTheme.badgeLookKey,
+    motif: badgeTheme.badgeMotif,
     credits: () => [],
     styleFor: () => 'flat',
   },

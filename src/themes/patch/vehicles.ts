@@ -117,8 +117,61 @@ export function vehicleArt(v: Vehicle, palette: PatchPalette): string {
         `<circle cx="0" cy="-10" r="5" fill="${accent}"/>`
       );
     }
+    case 'starship': {
+      // A swept arrowhead with an accent stripe on each wing, glowing trails fading behind.
+      const engines = v.engines === 1 ? [0] : v.engines === 2 ? [-8, 8] : [-13, 0, 13];
+      const trail = (y0: number, y1: number, width: number, opacity: number) =>
+        `<path d="${engines.map((x) => `M${x} ${y0}V${y1}`).join('')}" fill="none" stroke="${accent}" stroke-width="${width}" stroke-linecap="round"${opacity < 1 ? ` stroke-opacity="${opacity}"` : ''}/>`;
+      return (
+        trail(40, 70, 4.5, 1) +
+        trail(74, 96, 4, 0.5) +
+        trail(100, 114, 3.5, 0.22) +
+        fill(engines.map((x) => `M${x - 4} 32h8v8h-8Z`).join(''), METAL) +
+        fill(STARSHIP[v.wings].hull, hull) +
+        fill(STARSHIP[v.wings].stripe, accent) +
+        fill('M0 -36L6 -22L0 -16L-6 -22Z', glass)
+      );
+    }
+    case 'station': {
+      // A spoked ring on a mast: the ring's far half behind the hub, its near half in front.
+      const ring = (d: string) =>
+        `<path d="${d}" fill="none" stroke="${hull}" stroke-width="9"/>` +
+        `<path d="${d}" fill="none" stroke="${accent}" stroke-width="2" stroke-dasharray="3 7"/>`;
+      const panel = (y: number) =>
+        fill(`M-30 ${y}H30V${y + 14}H-30Z`, accent) + line(`M-15 ${y}V${y + 14}M0 ${y}V${y + 14}M15 ${y}V${y + 14}M-30 ${y + 7}H30`, 1.2, glass);
+      return (
+        fill('M-4 -48h8v100h-8Z', METAL) +
+        (v.panels !== 'none' ? panel(-60) : '') +
+        (v.panels === 'both' ? panel(46) : '') +
+        ring('M-64 0A64 22 0 1 1 64 0A64 22 0 1 1 -64 0') +
+        line('M-64 0H64M0 -22V22' + (v.spokes === 4 ? 'M-45.3 -15.6L45.3 15.6M-45.3 15.6L45.3 -15.6' : ''), 3) +
+        `<circle cx="0" cy="0" r="13" fill="${hull}"/><circle cx="0" cy="0" r="5" fill="${accent}"/>` +
+        ring('M-64 0A64 22 0 0 0 64 0') +
+        (v.panels !== 'both' ? `<circle cx="0" cy="54" r="3.5" fill="${accent}"/>` : '')
+      );
+    }
+    case 'garden':
+    case 'orbits':
+      // Whole scenes with their own world, drawn in canvas coordinates by sceneArt.
+      return '';
   }
 }
+
+/** Starship hulls by wing shape, nose at (0, −50), and the accent stripe along each wing. */
+const STARSHIP = {
+  delta: {
+    hull: 'M0 -50L14 -18L46 26L40 34L14 24L10 34H-10L-14 24L-40 34L-46 26L-14 -18Z',
+    stripe: 'M14 -18L46 26L40 30L12 -8ZM-14 -18L-46 26L-40 30L-12 -8Z',
+  },
+  swept: {
+    hull: 'M0 -50L12 -14L40 38L34 44L12 26L10 34H-10L-12 26L-34 44L-40 38L-12 -14Z',
+    stripe: 'M12 -14L40 38L35 40L10 -4ZM-12 -14L-40 38L-35 40L-10 -4Z',
+  },
+  dart: {
+    hull: 'M0 -50L10 -20L30 10V26L12 22L10 34H-10L-12 22L-30 26V10L-10 -20Z',
+    stripe: 'M10 -20L30 10V17L9 -8ZM-10 -20L-30 10V17L-9 -8Z',
+  },
+} as const;
 
 /** Local-coordinate bounds of the drawing (flames included), for centring and fitting it. */
 export function vehicleBox(v: Vehicle): { top: number; bottom: number; width: number } {
@@ -135,5 +188,13 @@ export function vehicleBox(v: Vehicle): { top: number; bottom: number; width: nu
       return { top: -44, bottom: 35, width: 90 };
     case 'probe':
       return { top: -44, bottom: 58, width: 124 };
+    case 'starship':
+      // Fit to the ship and the bright part of its trails; the faded tail may run past.
+      return { top: -50, bottom: 70, width: v.wings === 'dart' ? 60 : v.wings === 'swept' ? 80 : 92 };
+    case 'station':
+      return { top: v.panels === 'none' ? -48 : -60, bottom: v.panels === 'both' ? 60 : 57.5, width: 137 };
+    case 'garden':
+    case 'orbits':
+      return { top: -100, bottom: 100, width: 200 };
   }
 }

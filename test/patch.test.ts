@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { emblazon, emblazonOptions } from '../src/index.ts';
-import { SURFACE_CRAFT, describePatch, generatePatch, patchLookKey, renderPatch } from '../src/themes/patch/index.ts';
+import { SCENES, SURFACE_CRAFT, describePatch, generatePatch, isTriangle, patchLookKey, renderPatch } from '../src/themes/patch/index.ts';
 
 // Patch v1's exact output is frozen by the corpus digest in generate.test.ts; these check
 // behaviour and rules.
@@ -31,6 +31,30 @@ test('patch rules hold over 5,000 inputs', () => {
     assert.ok(!(p.body?.kind === 'moon' && p.accents.moon), `no extra moon beside the Moon — ${ctx}`);
     assert.match(describePatch(p), /^[A-Z][\w-]*( [\w-]+)?: an? .+/, ctx);
   }
+});
+
+test('patch v2 rules: scenes, triangles and the new craft', () => {
+  const seen = new Set<string>();
+  for (let i = 0; i < 5_000; i++) {
+    const p = generatePatch(`v2-${i}`, 2);
+    const ctx = `v2-${i}: ${describePatch(p)}`;
+    seen.add(p.vehicle.kind).add(p.shape);
+    assert.notEqual(p.vehicle.kind, 'rocket', `the old rocket is retired — ${ctx}`);
+    if (SCENES.includes(p.vehicle.kind)) {
+      assert.equal(p.body, undefined, `scenes bring their own world — ${ctx}`);
+      assert.equal(p.angle, 0, ctx);
+      assert.equal(p.trajectory, undefined, ctx);
+    }
+    if (p.vehicle.kind === 'starship' || p.vehicle.kind === 'station') assert.notEqual(p.trajectory?.kind, 'orbit', ctx);
+    if (isTriangle(p.shape)) assert.equal(p.accents.crew, 0, `no crew stars in a narrow band — ${ctx}`);
+    assert.match(describePatch(p), /^[A-Z][\w-]*( [\w-]+)?: an? .+/, ctx);
+  }
+  for (const k of ['starship', 'station', 'garden', 'orbits', 'triangle', 'triangleDown']) assert.ok(seen.has(k), `v2 draws ${k}`);
+});
+
+test('new patches are v2; v1 stays available', () => {
+  assert.equal(emblazon('alice', { theme: 'patch' }).version, 2);
+  assert.equal(emblazon('alice', { theme: 'patch', version: 1 }).version, 1);
 });
 
 test('the theme option routes to patches, with pickers and dark rims', () => {
