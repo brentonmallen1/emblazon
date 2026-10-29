@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" data-id="key" data-name="key" data-plural="keys" data-weight="1" data-tags="tall">
+<path fill-rule="evenodd" d="M31 23A19 19 0 1 0 69 23A19 19 0 1 0 31 23ZM43 23A7 7 0 1 1 57 23A7 7 0 1 1 43 23Z"/>
+<path d="M43 38H57V94H43Z"/>
+<path d="M37 44H63V51H37Z"/>
+<path d="M55 68H76V77H66V83H76V94H55Z"/>
+</svg>

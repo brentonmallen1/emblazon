@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" data-id="anchor" data-name="anchor" data-plural="anchors" data-weight="1" data-tags="">
+<path fill-rule="evenodd" d="M42 13A8 8 0 1 0 58 13A8 8 0 1 0 42 13ZM46 13A4 4 0 1 1 54 13A4 4 0 1 1 46 13Z"/>
+<path d="M46 20H54V86H46Z"/>
+<rect x="29" y="27" width="42" height="8" rx="2"/>
+<path d="M16 60A34 34 0 0 0 84 60H76A26 26 0 0 1 24 60Z"/>
+<path d="M20 44L31 63H9Z"/>
+<path d="M80 44L91 63H69Z"/>
+</svg>

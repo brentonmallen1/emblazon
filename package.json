@@ -11,6 +11,8 @@
     "dev": "node --watch server.ts",
     "start": "node server.ts",
     "sheet": "node scripts/sheet.ts",
+    "draw": "node scripts/draw-geometric.ts",
+    "assets": "node scripts/build-assets.ts",
     "test": "node --test \"test/**/*.test.ts\""
   }
 }

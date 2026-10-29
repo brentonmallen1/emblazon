@@ -1,4 +1,5 @@
 export type { Arms } from './arms.ts';
+export * from './charges.ts';
 export * from './fields.ts';
 export * from './lines.ts';
 export * from './ordinaries.ts';

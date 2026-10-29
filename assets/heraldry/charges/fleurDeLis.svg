@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" data-id="fleurDeLis" data-name="fleur-de-lis" data-plural="fleurs-de-lis" data-weight="3" data-tags="compact">
+<!-- Pieces overlap, so each is its own path: mirrored halves would cancel under one fill rule.
+     Every piece tucks well into the bar so the renderer's outline underlay never shows at a seam. -->
+<path d="M50 5C60 16 66 30 62 42C60 49 57 54 56 62H44C43 54 40 49 38 42C34 30 40 16 50 5Z"/>
+<path d="M56 61C58 38 72 24 84 26C94 28 95 44 88 52C90 44 86 36 80 37C72 38 66 48 66 61Z"/>
+<path d="M44 61C42 38 28 24 16 26C6 28 5 44 12 52C10 44 14 36 20 37C28 38 34 48 34 61Z"/>
+<path d="M28 56H72V65H28Z"/>
+<path d="M45 60H55C55 76 54 84 50 94C46 84 45 76 45 60Z"/>
+<path d="M58 60C66 64 76 72 78 82C72 78 64 76 56 73Z"/>
+<path d="M42 60C34 64 24 72 22 82C28 78 36 76 44 73Z"/>
+</svg>

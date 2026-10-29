@@ -1,5 +1,7 @@
 import { fnv1a } from '../../core/hash.ts';
+import { n } from '../../core/svg.ts';
 import type { Arms } from './arms.ts';
+import { CHARGES, type ChargeId, type Charges } from './charges.ts';
 import { partitionPath, variationPath, type Field } from './fields.ts';
 import { BLEED, CANVAS, FIELD_H, FIELD_OFFSET, FIELD_W } from './geometry.ts';
 import { BORDURE_WIDTH, ordinaryPath, type Ordinary } from './ordinaries.ts';
@@ -23,12 +25,15 @@ export function renderArms(arms: Arms, { size, finish = 'shaded' }: RenderOption
   const layers =
     fieldLayer(arms.field) +
     (arms.ordinary ? ordinaryLayer(arms.ordinary, shield) : '') +
+    (arms.charges ? chargeLayer(arms.charges, `${id}-ch`) : '') +
     (shaded ? `<rect width="${FIELD_W}" height="${FIELD_H}" fill="url(#${id}-shade)"/>` : '');
 
   const dims = size ? ` width="${size}" height="${size}"` : '';
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${CANVAS} ${CANVAS}"${dims}>` +
-    `<defs><clipPath id="${id}-clip"><path d="${shield}"/></clipPath>${shaded ? shadeGradient(`${id}-shade`) : ''}</defs>` +
+    `<defs><clipPath id="${id}-clip"><path d="${shield}"/></clipPath>` +
+    (arms.charges ? chargeDef(arms.charges.charge, `${id}-ch`) : '') +
+    `${shaded ? shadeGradient(`${id}-shade`) : ''}</defs>` +
     `<g transform="translate(${FIELD_OFFSET[0]} ${FIELD_OFFSET[1]})">` +
     `<g clip-path="url(#${id}-clip)">${layers}</g>` +
     `<path d="${shield}" fill="none" stroke="${OUTLINE}" stroke-width="4" stroke-linejoin="round"/>` +
@@ -55,6 +60,42 @@ function ordinaryLayer({ kind, line, tincture }: Ordinary, shield: string): stri
     );
   }
   return `<path d="${ordinaryPath(kind, line)}" fill="${fill}" ${stroke(2)}/>`;
+}
+
+/** Total outline stroke around charges, in field units (half of it shows outside the fill). */
+const CHARGE_OUTLINE = 3.5;
+
+/** A charge on its own, for asset previews. */
+export function renderCharge(charge: ChargeId, tincture: Tincture, { size }: Pick<RenderOptions, 'size'> = {}): string {
+  const ref = `ch${fnv1a(charge)}`;
+  const dims = size ? ` width="${size}" height="${size}"` : '';
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 108 108"${dims}>` +
+    `<defs>${chargeDef(charge, ref)}</defs>${chargeLayer({ charge, tincture, at: [{ x: 50, y: 50, size: 100 }] }, ref)}</svg>`
+  );
+}
+
+const chargeDef = (charge: ChargeId, ref: string): string => `<g id="${ref}">${CHARGES[charge].markup}</g>`;
+
+/**
+ * Each charge is drawn twice: a dark copy with a wide stroke, then the tincture on top. Only the
+ * outer half of the stroke survives, so overlapping pieces get one clean outline and cut-outs
+ * get an outline on their inside edge.
+ */
+function chargeLayer({ tincture, at }: Charges, ref: string): string {
+  const uses = (outline: boolean) =>
+    at
+      .map(
+        ({ x, y, size }) =>
+          `<use href="#${ref}" transform="translate(${n(x - size / 2)} ${n(y - size / 2)}) scale(${size / 100})"` +
+          (outline ? ` stroke-width="${n((CHARGE_OUTLINE * 100) / size)}"` : '') +
+          '/>',
+      )
+      .join('');
+  return (
+    `<g fill="${OUTLINE}" stroke="${OUTLINE}" stroke-linejoin="round">${uses(true)}</g>` +
+    `<g fill="${TINCTURE_HEX[tincture]}">${uses(false)}</g>`
+  );
 }
 
 const baseFill = (t: Tincture): string =>

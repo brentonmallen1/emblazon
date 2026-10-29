@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" data-id="sword" data-name="sword" data-plural="swords" data-weight="2" data-tags="tall">
+<path d="M50 5L59 18V64H41V18Z"/>
+<rect x="22" y="61" width="56" height="11" rx="4"/>
+<rect x="44" y="70" width="12" height="16"/>
+<circle cx="50" cy="89" r="7"/>
+</svg>

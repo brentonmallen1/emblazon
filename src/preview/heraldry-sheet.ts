@@ -1,6 +1,8 @@
 import { chance, pick, rngFor, weighted } from '../core/rng.ts';
 import { escapeXml } from '../core/svg.ts';
 import {
+  CHARGE_IDS,
+  CHARGES,
   COLORS,
   LINE_STYLES,
   LINED_ORDINARIES,
@@ -14,8 +16,11 @@ import {
   VARIATIONS,
   isMetal,
   renderArms,
+  renderCharge,
   tinctureName,
   type Arms,
+  type ChargePlacement,
+  type Charges,
   type Field,
   type LineStyle,
   type Ordinary,
@@ -31,10 +36,12 @@ export function heraldrySheet(): string {
       section('Partitions × lines', partitionMatrix()),
       section('Variations', row(VARIATIONS.map((v, i) => tile(renderArms({ shield: 'heater', field: { kind: 'variation', variation: v, tinctures: PAIRS[i] } }), label(v))))),
       section('Ordinaries × lines', ordinaryMatrix()),
+      section('Charges', row(CHARGE_IDS.map((c) => tile(renderCharge(c, 'or'), CHARGES[c].name)))),
+      section('Charges × tinctures and sizes', chargeMatrix()),
       section('At avatar sizes', sizeRows()),
       section(
         'Sampler',
-        `<p class="note">Seeded random mixes of the options above. Preview only: the real generator, rules and charges arrive in Phases 2–3.</p>` +
+        `<p class="note">Seeded random mixes of the options above. Preview only: the real generator, placement rules and blazon arrive in Phase 3.</p>` +
           row(Array.from({ length: 48 }, (_, i) => tile(renderArms(sampleArms(i), { size: 72 }), `#${i}`))),
       ),
     ].join(''),
@@ -65,7 +72,7 @@ function partitionMatrix(): string {
       ),
     ].join('');
   });
-  return matrix(cells);
+  return matrix(LINE_STYLES, cells);
 }
 
 function ordinaryMatrix(): string {
@@ -83,7 +90,34 @@ function ordinaryMatrix(): string {
       ),
     ].join('');
   });
-  return matrix(cells);
+  return matrix(LINE_STYLES, cells);
+}
+
+/** Three charges in 2-1, the most common arrangement on an otherwise empty field. */
+const THREE: readonly ChargePlacement[] = [
+  { x: 58, y: 64, size: 66 },
+  { x: 142, y: 64, size: 66 },
+  { x: 100, y: 148, size: 66 },
+];
+const ONE: readonly ChargePlacement[] = [{ x: 100, y: 100, size: 120 }];
+
+function chargeMatrix(): string {
+  const heads = [...TINCTURES.map(tinctureName), '128px', 'three · 64px', '48px', '32px'];
+  const rows = CHARGE_IDS.map((charge, i) => {
+    const [metal, color] = PAIRS[i % PAIRS.length];
+    const [fieldT, chargeT] = i % 2 === 0 ? [color, metal] : [metal, color];
+    const onShield = (at: readonly ChargePlacement[], size: number) =>
+      cell(renderArms({ shield: 'heater', field: { kind: 'plain', tincture: fieldT }, charges: { charge, tincture: chargeT, at } }, { size }));
+    return [
+      `<div class="rowlabel">${CHARGES[charge].name}</div>`,
+      ...TINCTURES.map((t) => cell(renderCharge(charge, t, { size: 40 }))),
+      onShield(ONE, 128),
+      onShield(THREE, 64),
+      onShield(ONE, 48),
+      onShield(ONE, 32),
+    ].join('');
+  });
+  return matrix(heads, rows);
 }
 
 function sizeRows(): string {
@@ -123,18 +157,25 @@ function sampleArms(i: number): Arms {
     field = { kind, partition, line: LINED_PARTITIONS.includes(partition) ? weighted(r, LINE_WEIGHTS) : 'straight', tinctures: pair };
   } else field = { kind, variation: pick(r, VARIATIONS), tinctures: pair };
 
+  // Plain field: opposite class. Divided field: anything not already on the field.
+  const opposite = (t: Tincture): Tincture => (isMetal(t) ? pick(r, COLORS) : pick(r, METALS));
+  const onField = (): Tincture => (field.kind === 'plain' ? opposite(field.tincture) : pick(r, TINCTURES.filter((t) => !pair.includes(t))));
+
   let ordinary: Ordinary | undefined;
-  if (field.kind !== 'variation' && chance(r, 0.75)) {
+  if (field.kind !== 'variation' && chance(r, 0.6)) {
     const ordKind = pick(r, ORDINARIES);
-    // Plain field: opposite class. Divided field: anything not already on the field.
-    const tincture =
-      field.kind === 'plain'
-        ? isMetal(field.tincture) ? pick(r, COLORS) : pick(r, METALS)
-        : pick(r, TINCTURES.filter((t) => !pair.includes(t)));
-    ordinary = { kind: ordKind, line: LINED_ORDINARIES.includes(ordKind) ? weighted(r, LINE_WEIGHTS) : 'straight', tincture };
+    ordinary = { kind: ordKind, line: LINED_ORDINARIES.includes(ordKind) ? weighted(r, LINE_WEIGHTS) : 'straight', tincture: onField() };
   }
 
-  return { shield: pick(r, SHIELDS), field, ...(ordinary && { ordinary }) };
+  let charges: Charges | undefined;
+  const charge = pick(r, CHARGE_IDS);
+  if (!ordinary && field.kind !== 'variation') {
+    charges = { charge, tincture: onField(), at: chance(r, 0.5) ? ONE : THREE };
+  } else if (ordinary?.kind === 'chief') {
+    charges = { charge, tincture: opposite(ordinary.tincture), at: [45, 100, 155].map((x) => ({ x, y: 33, size: 46 })) };
+  }
+
+  return { shield: pick(r, SHIELDS), field, ...(ordinary && { ordinary }), ...(charges && { charges }) };
 }
 
 // --- HTML scaffolding -------------------------------------------------------------------------
@@ -151,9 +192,9 @@ function swatch(t: Tincture): string {
   return `<figure><div class="swatch" style="background:${TINCTURE_HEX[t]}"></div><figcaption>${tinctureName(t)} · ${isMetal(t) ? 'metal' : 'colour'}</figcaption></figure>`;
 }
 
-function matrix(rows: string[]): string {
-  const head = ['<div></div>', ...LINE_STYLES.map((l) => `<div class="head">${l}</div>`)].join('');
-  return `<div class="scroll"><div class="matrix" style="--cols:${LINE_STYLES.length}">${head}${rows.join('')}</div></div>`;
+function matrix(heads: readonly string[], rows: string[]): string {
+  const head = ['<div></div>', ...heads.map((h) => `<div class="head">${escapeXml(h)}</div>`)].join('');
+  return `<div class="scroll"><div class="matrix" style="--cols:${heads.length}">${head}${rows.join('')}</div></div>`;
 }
 
 function page(body: string): string {
@@ -181,16 +222,16 @@ function page(body: string): string {
   figcaption { font-size: 11px; color: var(--muted); text-align: center; }
   .swatch { width: 56px; height: 56px; border-radius: 8px; border: 1px solid var(--line); }
   .scroll { overflow-x: auto; }
-  .matrix { display: grid; grid-template-columns: 116px repeat(var(--cols), 88px); gap: 6px 10px; align-items: center; width: max-content; }
+  .matrix { display: grid; grid-template-columns: 116px repeat(var(--cols), auto); justify-items: center; gap: 6px 10px; align-items: center; width: max-content; }
   .head { font-size: 11px; color: var(--muted); text-align: center; }
-  .rowlabel { font-size: 12px; }
+  .rowlabel { font-size: 12px; justify-self: start; }
   .sizes { display: flex; align-items: flex-end; gap: 18px; margin-bottom: 16px; flex-wrap: wrap; }
 </style>
 </head>
 <body>
 <main>
 <h1>emblazon · heraldry</h1>
-<p class="sub">Phase 1 contact sheet: shields, partitions, variations, ordinaries and line styles.</p>
+<p class="sub">Contact sheet: shields, partitions, variations, ordinaries, line styles and charges.</p>
 ${body}
 </main>
 </body>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" data-id="bell" data-name="bell" data-plural="bells" data-weight="1" data-tags="compact">
+<path fill-rule="evenodd" d="M45 10A5 5 0 1 0 55 10A5 5 0 1 0 45 10ZM47.5 10A2.5 2.5 0 1 1 52.5 10A2.5 2.5 0 1 1 47.5 10Z"/>
+<path d="M50 14C34 14 30 28 29 46C28 62 24 72 16 78H84C76 72 72 62 71 46C70 28 66 14 50 14Z"/>
+<rect x="12" y="77" width="76" height="7" rx="3"/>
+<circle cx="50" cy="89" r="6"/>
+</svg>
