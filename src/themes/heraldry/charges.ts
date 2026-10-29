@@ -1,7 +1,5 @@
-import { CHARGES } from './charges.generated.ts';
+import { CHARGES as GENERATED } from './charges.generated.ts';
 import type { Counterchanged, Tincture } from './tinctures.ts';
-
-export { CHARGES };
 
 export interface ChargeDef {
   name: string;
@@ -16,7 +14,10 @@ export interface ChargeDef {
   credit?: string;
 }
 
-export type ChargeId = keyof typeof CHARGES;
+export type ChargeId = keyof typeof GENERATED;
+
+/** Every charge by id, typed by its declared shape (so optional fields like `credit` are visible). */
+export const CHARGES: Readonly<Record<ChargeId, ChargeDef>> = GENERATED;
 export const CHARGE_IDS = Object.keys(CHARGES) as ChargeId[];
 
 /** Centre and size of one charge, in field coordinates. */

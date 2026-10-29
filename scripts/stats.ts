@@ -5,18 +5,10 @@
  * so this errs toward calling two emblems lookalikes.
  * Usage: npm run stats [-- count [version]]
  */
-import { HERALDRY_VERSION, generateArms, type Arms } from '../src/themes/heraldry/index.ts';
+import { HERALDRY_VERSION, generateArms, lookKey } from '../src/themes/heraldry/index.ts';
 
 const N = Number(process.argv[2] ?? 10_000);
 const VERSION = Number(process.argv[3] ?? HERALDRY_VERSION);
-
-function salientKey({ field, ordinary, charges }: Arms): string {
-  const f =
-    field.kind === 'plain'
-      ? `plain:${field.tincture}`
-      : `${field.kind === 'partition' ? field.partition : field.variation}:${field.tinctures.join('/')}`;
-  return [f, ordinary ? `${ordinary.kind}:${ordinary.tincture}` : '-', charges ? `${charges.charge}:${charges.tincture}` : '-'].join(' | ');
-}
 
 const tally = (map: Map<string, number>, key: string) => map.set(key, (map.get(key) ?? 0) + 1);
 const salient = new Map<string, number>();
@@ -25,7 +17,7 @@ const breakdown = { field: new Map<string, number>(), ordinary: new Map<string, 
 
 for (let i = 0; i < N; i++) {
   const arms = generateArms(`user${i}@example.com`, VERSION);
-  tally(salient, salientKey(arms));
+  tally(salient, lookKey(arms));
   tally(full, JSON.stringify(arms));
   tally(breakdown.field, arms.field.kind);
   tally(breakdown.ordinary, arms.ordinary?.kind ?? '(none)');

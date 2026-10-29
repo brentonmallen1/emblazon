@@ -4,6 +4,13 @@
   "description": "Deterministic heraldic and insignia avatars from any string.",
   "type": "module",
   "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src",
+    "assets/CREDITS.md"
+  ],
   "engines": {
     "node": ">=23.6"
   },
@@ -15,6 +22,7 @@
     "import-icons": "node scripts/import-game-icons.ts",
     "assets": "node scripts/build-assets.ts",
     "stats": "node scripts/stats.ts",
+    "build": "node scripts/build.ts",
     "test": "node --test \"test/**/*.test.ts\""
   }
 }

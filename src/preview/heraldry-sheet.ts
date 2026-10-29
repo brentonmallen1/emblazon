@@ -23,6 +23,7 @@ import {
   type ChargePlacement,
   type Tincture,
 } from '../themes/heraldry/index.ts';
+import { emblazonOptions } from '../index.ts';
 import { page } from './layout.ts';
 
 /** Contact sheet: every procedural option, at a glance and at avatar sizes. */
@@ -41,8 +42,42 @@ export function heraldrySheet(): string {
       section('Charges', row(CHARGE_IDS.map((c) => tile(renderCharge(c, 'or'), CHARGES[c].name + (CHARGES[c].credit ? ' ·' : ''))))),
       section('Charges × tinctures and sizes', chargeMatrix()),
       section('At avatar sizes', sizeRows()),
+      section('On jb-rpg backgrounds', backdropRows()),
       section('Generated', generatedGrid(200)),
     ].join(''),
+  );
+}
+
+/** jb-rpg's theme screens: background and accent, from its design canvas and theme styles. */
+const JB_RPG_THEMES: readonly [name: string, background: string, accent: string][] = [
+  ['fantasy', '#1b120a', '#d9a557'],
+  ['horror', '#0c0b0b', '#e0574b'],
+  ['cyberpunk', '#0a090b', '#f2e64a'],
+  ['deep space', '#0b0a1a', '#9d4edd'],
+  ['insanity', '#0f0c14', '#a9dc7e'],
+  ['modern', '#1a1a2e', '#667eea'],
+];
+
+/** The same picks with no rim, the default rim, and the theme's accent as rim. */
+function backdropRows(): string {
+  const picks = emblazonOptions('sheet:backdrops', { count: 3 });
+  const rows = JB_RPG_THEMES.map(([name, background, accent]) => {
+    const variant = (label: string, opts: object) =>
+      `<div class="bd-group"><span>${label}</span>${picks.map((e) => renderArms(e.config, { size: 64, ...opts })).join('')}</div>`;
+    return (
+      `<div class="bd-row" style="background:${background}"><span class="bd-name" style="color:${accent}">${name}</span>` +
+      variant('no rim', {}) +
+      variant('rim', { backdrop: 'dark' }) +
+      variant('accent rim', { backdrop: 'dark', rim: accent }) +
+      `</div>`
+    );
+  });
+  return (
+    `<p class="note">Picks from <code>emblazonOptions()</code> on each theme's screen colour. Without a rim, the shield's dark outline and any sable disappear.</p>` +
+    `<style>.bd-row{display:flex;flex-wrap:wrap;align-items:center;gap:12px 28px;padding:14px 18px;border-radius:10px;margin-bottom:8px}` +
+    `.bd-name{width:84px;font-size:12px;letter-spacing:.08em;text-transform:uppercase}.bd-group{display:flex;align-items:center;gap:6px}` +
+    `.bd-group span{font-size:10px;color:#9a978e;width:44px}</style>` +
+    rows.join('')
   );
 }
 

@@ -132,7 +132,7 @@ function contrasting(field: Field): readonly Tincture[] {
   return TINCTURES.filter((t) => !field.tinctures.includes(t));
 }
 
-const hasTag = (id: ChargeId, tag: string): boolean => (CHARGES[id].tags as readonly string[]).includes(tag);
+const hasTag = (id: ChargeId, tag: string): boolean => CHARGES[id].tags.includes(tag);
 
 /** Weighted pick among allowed tinctures, plus any furs offered. With no furs, identical to v1. */
 function paint(rng: Rng, w: HeraldryWeights, allowed: readonly Tincture[], furs: Readonly<Partial<Record<Fur, number>>> = {}): Paint {

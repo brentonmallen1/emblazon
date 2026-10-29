@@ -61,7 +61,7 @@ test('unknown versions are rejected', () => {
   assert.throws(() => generateArms('alice', 99), RangeError);
 });
 
-const hasTag = (id: ChargeId, tag: string) => (CHARGES[id].tags as readonly string[]).includes(tag);
+const hasTag = (id: ChargeId, tag: string) => CHARGES[id].tags.includes(tag);
 
 function checkRules(input: string, version: number, { field, ordinary, charges }: Arms): void {
   const ctx = `v${version} ${input}: ${blazon({ shield: 'heater', field, ordinary, charges })}`;

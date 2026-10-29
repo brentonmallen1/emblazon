@@ -3,7 +3,9 @@ import { createServer, type ServerResponse } from 'node:http';
 import { join } from 'node:path';
 import { emblazon } from './src/index.ts';
 import { heraldrySheet } from './src/preview/heraldry-sheet.ts';
+import { picker } from './src/preview/picker.ts';
 import { playground } from './src/preview/playground.ts';
+import { toBrowserJs } from './scripts/lib/browser-js.ts';
 import { HERALDRY_VERSION, HERALDRY_VERSIONS } from './src/themes/heraldry/index.ts';
 
 const PORT = Number(process.env.PORT ?? 4747);
@@ -19,6 +21,20 @@ createServer((req, res) => {
 
   if (pathname === '/') return send(res, 200, 'text/html; charset=utf-8', playground());
   if (pathname === '/sheet/heraldry') return send(res, 200, 'text/html; charset=utf-8', heraldrySheet());
+
+  if (pathname === '/picker') return send(res, 200, 'text/html; charset=utf-8', picker());
+
+  // The library as browser ES modules, types stripped on the fly: /lib/index.js ← src/index.ts.
+  // Segments of word characters and '-', single dots allowed inside a file name (charges.generated),
+  // so '..' can never match and nothing outside src/ is reachable.
+  const lib = pathname.match(/^\/lib\/((?:[\w-]+\/)*[\w-]+(?:\.[\w-]+)*)\.js$/);
+  if (lib) {
+    try {
+      return send(res, 200, 'text/javascript; charset=utf-8', toBrowserJs(readFileSync(join('src', `${lib[1]}.ts`), 'utf8')));
+    } catch {
+      return send(res, 404, 'text/plain; charset=utf-8', 'not found');
+    }
+  }
 
   // Generated review pages in out/ (gitignored). Plain names only: no directories, no traversal.
   const page = pathname.match(/^\/out\/([\w.-]+\.html)$/);

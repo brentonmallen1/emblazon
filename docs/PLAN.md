@@ -7,9 +7,10 @@ Deterministic, themed avatar generator in the spirit of Robohash. Any input stri
 username, UUID) always produces the same emblem. Themes are **coats of arms** first, **mission
 patches** second, more later. Emblems are imagery only: no text inside them.
 
-Status: **Phase 4 done** — `heraldry@2` (default) adds 45 game-icons beasts and objects, furs
-and counterchanging; `heraldry@1` is frozen and byte-identical. Next: Phase 5 (jb-rpg
-integration essentials).
+Status: **Phase 5 done** — the library runs in the browser (pure-JS SHA-256, no `node:`
+imports, type-checks under jb-rpg's compiler settings), offers `emblazonOptions()` for pickers,
+renders a rim for dark screens, and carries attribution. Next: wire it into jb-rpg (needs
+decision §8.4), then Phase 6 (mission patches).
 
 ---
 
@@ -321,7 +322,7 @@ potrace + manual cleanup. All non-original assets recorded in `assets/CREDITS.md
 | **2. Charges** | geometric authoring script, 9 hand-drawn charges, build/validate script, sheet section 3 | 20 charges pass validation and read at 32px |
 | **3. Generation** | placements, rules, `generate` / `render` / `blazon`, API routes, tests, stats, sheet section 4 | 200-emblem sheet looks good; rule + determinism tests pass; collisions < 1% |
 | **4. Heraldic depth** ✅ | 45 game-icons charges (vendored, credited), furs (ermine, ermines, erminois, pean, vair), counterchanging, v1 frozen by a corpus digest test | `heraldry@2` released; v1 byte-identical; v2 lookalike chance 1 in ~51,700 per pair, 99.1% distinct |
-| **5. jb-rpg essentials** | browser-safe hashing (bundled sha256, sync API), `options(theme, seed, count)` for pickers, a dark-background check on the sheet, attribution helper, how jb-rpg imports it | jb-rpg can offer 4–6 fantasy symbols in its own frontend |
+| **5. jb-rpg essentials** ✅ | pure-JS sync SHA-256 (identical output), `emblazonOptions(seed, {count})` (distinct looks and charges, stable, each stores `{input, version}`), `backdrop: 'dark'` rim, `ATTRIBUTION` + per-emblem `credits`, `exports` → `src/`, `npm run build` → `dist/`, `/picker` demo running in the browser | the picker runs client-side (6 options in ~3 ms); `src/` passes jb-rpg's `tsc` settings; built JS matches source byte-for-byte. Wiring into jb-rpg itself waits on §8.4 |
 | **6. Mission patches** | §4 inventory, parts-based vehicles; imagery only (no text ring) | `patch@1` meets the same gates; jb-rpg deep_space uses it |
 | **7. Theme styles for the rest of jb-rpg** | `insignia` (cyberpunk), `seal` (horror), `sigil` (insanity), `badge` (modern), reusing vendored art by theme tag | each meets the same gates on its theme's background |
 | **8. Packaging** | PNG via resvg, caching headers, Docker image for self-hosting, npm package | `docker run` serves all themes |
@@ -336,8 +337,13 @@ potrace + manual cleanup. All non-original assets recorded in `assets/CREDITS.md
 2. ~~Browser support timing~~ — decided: needed now for jb-rpg (Phase 5); bundled sync sha256.
 3. **Theme style mapping (§0):** confirm the proposed symbol style per jb-rpg theme before
    Phase 7.
-4. **How jb-rpg consumes it:** vendored copy, git dependency, or npm package; and where the
-   game shows the credit line.
+4. **How jb-rpg consumes it**, and where the game shows the credit line. jb-rpg's frontend
+   (Vite, TS bundler resolution, same strict flags) can import `src/` as-is, so no build step is
+   needed. Options: (a) **vendor** a copy of `src/` into `jb-rpg/frontend/src/vendor/emblazon`
+   with a sync script: simplest, works in its Docker build; (b) **git dependency**
+   (`github:…/emblazon`): needs this repo pushed somewhere; (c) `file:../../emblazon`: easy
+   locally but breaks jb-rpg's Docker build, which can't see sibling folders. Also: store the
+   choice on jb-rpg's `Character` (`symbol: {input, version}`).
 5. **Raster output:** is SVG-only fine for the first deploy?
 6. **Deploy target:** self-hosted Docker (e.g. Unraid) vs. a static/edge function.
 7. **License** for code and original art (e.g. MIT code + CC BY art).

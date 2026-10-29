@@ -1,7 +1,7 @@
 import { escapeXml } from '../core/svg.ts';
 
 /** Shared page shell for the preview pages. */
-export function page(title: string, subtitle: string, body: string, script = ''): string {
+export function page(title: string, subtitle: string, body: string, script = '', module = false): string {
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -34,16 +34,17 @@ export function page(title: string, subtitle: string, body: string, script = '')
   .sizes { display: flex; align-items: flex-end; gap: 18px; margin-bottom: 16px; flex-wrap: wrap; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); gap: 10px 6px; }
   .grid figure { gap: 2px; }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 </style>
 </head>
 <body>
 <main>
-<nav><a href="/">Try it</a><a href="/sheet/heraldry">Contact sheet</a></nav>
+<nav><a href="/">Try it</a><a href="/picker">Hero symbol picker</a><a href="/sheet/heraldry">Contact sheet</a></nav>
 <h1>${escapeXml(title)}</h1>
 <p class="sub">${escapeXml(subtitle)}</p>
 ${body}
 </main>
-${script ? `<script>${script}</script>` : ''}
+${script ? `<script${module ? ' type="module"' : ''}>${script}</script>` : ''}
 </body>
 </html>
 `;

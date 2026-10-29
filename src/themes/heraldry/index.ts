@@ -6,6 +6,7 @@ export * from './furs.ts';
 export * from './generate.ts';
 export { FIELD_H, FIELD_W } from './geometry.ts';
 export * from './lines.ts';
+export * from './look.ts';
 export * from './ordinaries.ts';
 export * from './render.ts';
 export * from './shields.ts';

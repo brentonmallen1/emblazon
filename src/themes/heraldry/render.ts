@@ -1,5 +1,5 @@
 import { fnv1a } from '../../core/hash.ts';
-import { n } from '../../core/svg.ts';
+import { escapeXml, n } from '../../core/svg.ts';
 import type { Arms } from './arms.ts';
 import { CHARGES, type ChargeId, type Charges } from './charges.ts';
 import { partitionPath, variationPath, type Field } from './fields.ts';
@@ -14,7 +14,16 @@ export interface RenderOptions {
   size?: number;
   /** 'shaded' adds a soft highlight and vignette over the field. */
   finish?: 'flat' | 'shaded';
+  /**
+   * What the emblem will sit on. 'dark' adds a thin light rim outside the shield's dark outline,
+   * so the edge (and sable fields) stay visible on near-black screens.
+   */
+  backdrop?: 'light' | 'dark';
+  /** Rim colour for a dark backdrop, e.g. a theme's accent. Defaults to a warm off-white. */
+  rim?: string;
 }
+
+const DEFAULT_RIM = '#EDE6D6';
 
 /** What layers need beyond their own config: the id prefix, the field, and a place to add defs. */
 interface Context {
@@ -24,7 +33,7 @@ interface Context {
 }
 
 /** Pure: the same arms and options always produce the same SVG string. */
-export function renderArms(arms: Arms, { size, finish = 'shaded' }: RenderOptions = {}): string {
+export function renderArms(arms: Arms, { size, finish = 'shaded', backdrop = 'light', rim = DEFAULT_RIM }: RenderOptions = {}): string {
   // Ids derive from the content so several emblems can share one HTML document.
   const id = `em${fnv1a(JSON.stringify(arms))}`;
   const shield = SHIELD_PATHS[arms.shield];
@@ -46,6 +55,7 @@ export function renderArms(arms: Arms, { size, finish = 'shaded' }: RenderOption
     `${shaded ? shadeGradient(`${id}-shade`) : ''}</defs>` +
     `<g transform="translate(${FIELD_OFFSET[0]} ${FIELD_OFFSET[1]})">` +
     `<g clip-path="url(#${id}-clip)">${layers}</g>` +
+    (backdrop === 'dark' ? `<path d="${shield}" fill="none" stroke="${escapeXml(rim)}" stroke-width="9" stroke-linejoin="round"/>` : '') +
     `<path d="${shield}" fill="none" stroke="${OUTLINE}" stroke-width="4" stroke-linejoin="round"/>` +
     `</g></svg>`
   );
