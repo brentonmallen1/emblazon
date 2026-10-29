@@ -7,6 +7,9 @@ export interface PageOptions {
   bare?: boolean;
 }
 
+/** Source code and issues. */
+export const GITHUB = 'https://github.com/brentonmallen1/emblazon';
+
 /** The small shield in the header. */
 const MARK = `<svg width="22" height="24" viewBox="0 0 22 24" aria-hidden="true"><path d="M1 2h20v9c0 6-4.4 10-10 12C5.4 21 1 17 1 11Z" fill="var(--brand)"/><path d="M11 6v13M6 11h10" stroke="var(--bg)" stroke-width="2.2" stroke-linecap="round"/></svg>`;
 
@@ -49,9 +52,9 @@ export function page(title: string, subtitle: string, body: string, script = '',
   .top-in { max-width: 1180px; margin: 0 auto; padding: 0 16px; min-height: 62px; display: flex; align-items: center; gap: 12px 24px; flex-wrap: wrap; }
   .brand { display: inline-flex; align-items: center; gap: 9px; font-weight: 700; font-size: 17px; letter-spacing: -.01em; text-decoration: none; }
   .links { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; margin-left: auto; }
-  .links > a, .menu > summary { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-radius: 9px; color: var(--muted); text-decoration: none; font-weight: 500; font-size: 14px; cursor: pointer; transition: background .15s, color .15s; }
-  .links > a:hover, .menu > summary:hover, .menu[open] > summary { background: var(--soft); color: var(--fg); }
-  .links > a[aria-current="page"], .menu.current > summary { color: var(--fg); background: var(--soft); }
+  .links > a:not(.btn), .menu > summary { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-radius: 9px; color: var(--muted); text-decoration: none; font-weight: 500; font-size: 14px; cursor: pointer; transition: background .15s, color .15s; }
+  .links > a:not(.btn):hover, .menu > summary:hover, .menu[open] > summary { background: var(--soft); color: var(--fg); }
+  .links > a:not(.btn)[aria-current="page"], .menu.current > summary { color: var(--fg); background: var(--soft); }
   .menu { position: relative; }
   .menu > summary { list-style: none; }
   .menu > summary::-webkit-details-marker { display: none; }
@@ -64,6 +67,7 @@ export function page(title: string, subtitle: string, body: string, script = '',
   .menu-panel b { display: block; font-weight: 600; text-transform: capitalize; font-size: 14px; }
   .menu-panel small { display: block; color: var(--muted); font-size: 12px; }
   .links .btn { margin-left: 8px; }
+  .links > a.gh { padding: 0 9px; }
   @media (max-width: 640px) { .top-in { padding-top: 10px; } .links { margin-left: -12px; width: calc(100% + 12px); padding-bottom: 8px; } .links .btn { display: none; } .menu-panel { left: 0; right: auto; } }
 
   /* Buttons */
@@ -116,6 +120,7 @@ export function page(title: string, subtitle: string, body: string, script = '',
       <details class="menu" id="themes-menu"><summary>Themes</summary><div class="menu-panel" role="menu">${themeLinks}</div></details>
       <a href="/picker">Picker</a>
       <a href="/docs">API</a>
+      <a class="gh" href="${GITHUB}" aria-label="emblazon on GitHub" title="emblazon on GitHub"><svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
       <a class="btn btn-primary btn-sm" href="/#try">Try it</a>
     </nav>
   </div>
@@ -126,7 +131,7 @@ ${body}
 </main>
 <footer class="foot"><div class="foot-in">
   <span>emblazon · deterministic emblems from any string. Some heraldic charges adapted from <a href="https://game-icons.net">game-icons.net</a> (CC BY 3.0).</span>
-  <nav aria-label="Footer"><a href="/docs">API docs</a><a href="/api/v1/openapi.json">OpenAPI</a><a href="/picker">Picker</a></nav>
+  <nav aria-label="Footer"><a href="${GITHUB}">GitHub</a><a href="/docs">API docs</a><a href="/api/v1/openapi.json">OpenAPI</a><a href="/picker">Picker</a></nav>
 </div></footer>
 <script>
 (() => {
