@@ -104,7 +104,7 @@ export const BASE_HEADERS: Readonly<Record<string, string>> = {
 /** Site pages: inline styles and scripts are ours; nothing loads from elsewhere; no framing. */
 export const PAGE_HEADERS: Readonly<Record<string, string>> = {
   'content-security-policy':
-    "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+    "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; connect-src 'self' https://cloudflareinsights.com; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
   'x-frame-options': 'DENY',
 };
 

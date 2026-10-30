@@ -110,6 +110,7 @@ export function page(title: string, subtitle: string, body: string, script = '',
   .grid figure { gap: 2px; }
   .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 </style>
+<!-- Cloudflare Web Analytics: cookieless page-view counts --><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "6446bede9b914fe8875fc569e9aaf0c5"}'></script>
 </head>
 <body>
 <header class="top">
