@@ -225,7 +225,7 @@ export function playground(origin: string): string {
 </section>
 
 <section class="sec" aria-labelledby="themes-title">
-  <div class="sec-head"><div><h2 id="themes-title">Six themes</h2><p>Each made for one of jb-rpg's settings, drawn flat for dark screens.</p></div></div>
+  <div class="sec-head"><div><h2 id="themes-title">Six themes</h2><p>Fantasy, deep space, cyberpunk, horror, insanity and modern, drawn flat for dark screens.</p></div></div>
   <div class="themes">${gallery}</div>
 </section>
 

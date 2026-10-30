@@ -21,7 +21,7 @@ const params = (rows: [name: string, type: string, def: string, what: string][])
     .map(([n, t, d, w]) => `<tr><td><code>${n}</code></td><td>${t}</td><td>${d ? `<code>${escapeXml(d)}</code>` : '—'}</td><td>${w}</td></tr>`)
     .join('')}</tbody></table></div>`;
 
-/** The API reference: how to call the service from jb-rpg or anything else. */
+/** The API reference: how to call the service from anything that can make a GET request. */
 export function docs(origin: string, limitSummary?: string): string {
   const themes = Object.keys(THEMES) as ThemeName[];
   const example = emblemsResult(new URLSearchParams({ input: 'wren', theme: 'patch', count: '2' }), origin);
@@ -88,7 +88,7 @@ export function docs(origin: string, limitSummary?: string): string {
   <h3>Show an emblem</h3>
   <p>The image route works straight in an <code>&lt;img&gt;</code> tag.</p>
   ${code(`<img src="${origin}/patch/wren.svg?v=2" width="64" height="64" alt="">`)}
-  <h3>Offer a choice (e.g. a hero's symbol in jb-rpg)</h3>
+  <h3>Offer a choice (e.g. a symbol for a game character)</h3>
   <p>Ask for up to ${MAX_VARIANTS} emblems in one call, then step through them locally: show their URLs and store what the player picks.</p>
   ${code(`const EMBLAZON = '${origin}';
 

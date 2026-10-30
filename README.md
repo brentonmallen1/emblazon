@@ -6,7 +6,6 @@
   <a href="https://emblazon.mallen.us"><b>Live site</b></a> ·
   <a href="https://emblazon.mallen.us/#try">Playground</a> ·
   <a href="https://emblazon.mallen.us/docs">API docs</a> ·
-  <a href="https://emblazon.mallen.us/picker">Picker demo</a> ·
   <a href="docs/PLAN.md">Design notes</a>
 </p>
 
@@ -19,7 +18,8 @@ patches and more. Send a username, an email or a UUID; get back an SVG and a one
 description. The same input, theme and version always give the same emblem, so you never store
 images: store the input and draw it again.
 
-- **Six themes**, each made for one of jb-rpg's settings and drawn flat for dark screens.
+- **Six themes**: fantasy, deep space, cyberpunk, horror, insanity and modern, drawn flat
+  for dark screens.
 - **An HTTP API** with batches of up to ten emblems per call, or **a library** with no
   dependencies that runs in browsers and Node alike.
 - **Frozen versions**: a released theme version never changes, tested byte for byte.
@@ -104,7 +104,7 @@ dependencies.
 
 | Command | What it does |
 |---|---|
-| `just dev` | The site and API with reload on :4747: playground, docs, picker, sheets |
+| `just dev` | The site and API with reload on :4747: playground, docs, sheets |
 | `just test` | Frozen-version snapshots, corpus digests, per-theme rules, the API and the request handler |
 | `just typecheck` | Type-checks the library and the Worker as a strict browser app would |
 | `just stats [count] [theme] [version]` | How often two inputs look alike |
@@ -117,8 +117,8 @@ Design, asset inventory and roadmap: [docs/PLAN.md](docs/PLAN.md).
 ## Deploy
 
 **Cloudflare Workers** runs production at https://emblazon.mallen.us
-([wrangler.toml](wrangler.toml)). Pages and the picker's modules are prerendered into `site/` and
-served as static assets. The Worker ([worker.ts](worker.ts)) answers the API and images through
+([wrangler.toml](wrangler.toml)). Pages are prerendered into `site/` and served as static
+assets. The Worker ([worker.ts](worker.ts)) answers the API and images through
 the same handler as the Node server, rate-limited by Cloudflare's binding.
 
 [CI](.github/workflows/ci.yml) tests every push and pull request and deploys `main` when the

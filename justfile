@@ -13,7 +13,7 @@ default:
 install:
     @node -e "const [maj, min] = process.versions.node.split('.').map(Number); if (maj < 23 || (maj === 23 && min < 6)) { console.error('emblazon needs Node 23.6+ (found ' + process.version + ')'); process.exit(1) } else console.log('Node ' + process.version + ': ready')"
 
-# Run the preview server with reload: playground, picker, contact sheets, emblem API
+# Run the preview server with reload: playground, docs, contact sheets, emblem API
 dev:
     @echo "Starting emblazon on http://localhost:{{port}}"
     PORT={{port}} node --watch server.ts

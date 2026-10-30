@@ -1,6 +1,6 @@
 /**
- * The service on Cloudflare Workers (see wrangler.toml). Site pages, the picker's library modules
- * and their headers are static assets built by scripts/build-site.ts and served by Cloudflare
+ * The service on Cloudflare Workers (see wrangler.toml). Site pages and their headers are
+ * static assets built by scripts/build-site.ts and served by Cloudflare
  * before this code runs; the Worker answers the API and emblem image routes.
  */
 import { handle } from './src/preview/handler.ts';

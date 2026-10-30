@@ -19,7 +19,8 @@ test('routes answer with the right status, type and headers', async () => {
     ['/patch/x.svg?v=2', 200, 'image/svg+xml'],
     ['/patch/x.json', 200, 'application/json'],
     ['/api/v1/nope', 404, 'application/json'],
-    ['/lib/index.js', 404, 'text/plain'], // no module loader in this context (as on Workers)
+    ['/lib/index.js', 404, 'text/plain'],
+    ['/picker', 404, 'text/plain'],
     ['/nope', 404, 'text/plain'],
   ];
   for (const [path, status, type] of cases) {
@@ -61,5 +62,5 @@ test('links use the public URL, and the prerendered site covers every theme shee
   assert.equal(body.emblems[0].url, `https://emblazon.example/heraldry/x.svg?v=${THEMES.heraldry.latest}`);
   const pages = Object.keys(sitePages('https://emblazon.example'));
   for (const t of Object.keys(THEMES)) assert.ok(pages.includes(`/sheet/${t}`), t);
-  assert.ok(pages.includes('/') && pages.includes('/docs') && pages.includes('/picker'));
+  assert.ok(pages.includes('/') && pages.includes('/docs'));
 });

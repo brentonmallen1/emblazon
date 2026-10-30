@@ -8,7 +8,6 @@ import { createServer } from 'node:http';
 import { join } from 'node:path';
 import { RateLimiter, clientKey } from './src/preview/guard.ts';
 import { handle } from './src/preview/handler.ts';
-import { toBrowserJs } from './scripts/lib/browser-js.ts';
 
 const env = process.env;
 const PORT = Number(env.PORT ?? 4747);
@@ -22,21 +21,6 @@ const RATE_PER_MINUTE = Number(env.RATE_LIMIT_PER_MINUTE ?? 120);
 const RATE_BURST = Math.max(1, Number(env.RATE_LIMIT_BURST ?? 60));
 
 const limiter = RATE_PER_MINUTE > 0 ? new RateLimiter(RATE_PER_MINUTE, RATE_BURST) : undefined;
-
-/** Library modules for the in-browser picker, transpiled once each. */
-const modules = new Map<string, string>();
-function libraryModule(path: string): string | undefined {
-  let js = modules.get(path);
-  if (js === undefined) {
-    try {
-      js = toBrowserJs(readFileSync(join('src', `${path}.ts`), 'utf8'));
-    } catch {
-      return undefined;
-    }
-    modules.set(path, js);
-  }
-  return js;
-}
 
 function reviewPage(name: string): string | undefined {
   try {
@@ -52,7 +36,6 @@ const context = {
   fallbackHost: `localhost:${PORT}`,
   rateLimit: limiter && ((ip: string) => limiter.take(ip)),
   limitSummary: limiter && `Each client may make <b>${RATE_BURST}</b> requests at once, refilled at <b>${RATE_PER_MINUTE} per minute</b>.`,
-  libraryModule,
   reviewPage,
 };
 

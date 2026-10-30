@@ -9,7 +9,6 @@ import { docs } from './docs.ts';
 import { API_HEADERS, BASE_HEADERS, IMAGE_HEADERS, MAX_URL, PAGE_HEADERS, originOf, rateHeaders, type RateDecision } from './guard.ts';
 import { heraldrySheet } from './heraldry-sheet.ts';
 import { patchSheet } from './patch-sheet.ts';
-import { picker } from './picker.ts';
 import { playground } from './playground.ts';
 import { themeSheet } from './theme-sheet.ts';
 
@@ -26,8 +25,6 @@ export interface ServiceContext {
   rateLimit?: (clientIp: string) => RateDecision | Promise<RateDecision>;
   /** One sentence for the docs describing the limit in force. */
   limitSummary?: string;
-  /** The library as a browser module (/lib/…​.js), for the in-browser picker. Node only. */
-  libraryModule?: (path: string) => string | undefined;
   /** Generated review pages in out/. Node only. */
   reviewPage?: (name: string) => string | undefined;
 }
@@ -35,14 +32,13 @@ export interface ServiceContext {
 /** The shield in the header, for browsers that ask for /favicon.ico regardless of the page's icon. */
 export const FAVICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 22 24"><path d="M1 2h20v9c0 6-4.4 10-10 12C5.4 21 1 17 1 11Z" fill="#c9963f"/></svg>';
 
-type Kind = 'page' | 'image' | 'api' | 'plain' | 'script';
-const KIND_HEADERS: Record<Kind, Readonly<Record<string, string>>> = { page: PAGE_HEADERS, image: IMAGE_HEADERS, api: API_HEADERS, plain: {}, script: {} };
+type Kind = 'page' | 'image' | 'api' | 'plain';
+const KIND_HEADERS: Record<Kind, Readonly<Record<string, string>>> = { page: PAGE_HEADERS, image: IMAGE_HEADERS, api: API_HEADERS, plain: {} };
 const TYPES: Record<Kind, string> = {
   page: 'text/html; charset=utf-8',
   image: 'image/svg+xml',
   api: 'application/json; charset=utf-8',
   plain: 'text/plain; charset=utf-8',
-  script: 'text/javascript; charset=utf-8',
 };
 
 function reply(status: number, kind: Kind, body: string | null, cache = 'no-store', extra: Record<string, string> = {}): Response {
@@ -57,7 +53,6 @@ export function sitePages(origin: string, limitSummary?: string): Record<string,
   return {
     '/': () => playground(origin),
     '/docs': () => docs(origin, limitSummary),
-    '/picker': picker,
     '/sheet/heraldry': () => heraldrySheet('flat'),
     '/sheet/patch': patchSheet,
     ...Object.fromEntries((Object.keys(THEMES) as ThemeName[]).filter((t) => t !== 'heraldry' && t !== 'patch').map((t) => [`/sheet/${t}`, () => themeSheet(t)])),
@@ -89,13 +84,6 @@ export async function handle(request: Request, ctx: ServiceContext): Promise<Res
   const isApi = pathname.startsWith('/api/');
 
   // Static things first: they cost nothing and don't count against a client.
-  const lib = pathname.match(/^\/lib\/((?:[\w-]+\/)*[\w-]+(?:\.[\w-]+)*)\.js$/);
-  if (lib) {
-    // Segments of word characters and '-', single dots allowed inside a file name (charges.generated),
-    // so '..' can never match and nothing outside src/ is reachable.
-    const js = ctx.libraryModule?.(lib[1]);
-    return js === undefined ? reply(404, 'plain', 'not found') : reply(200, 'script', js, 'public, max-age=300');
-  }
   if (pathname === '/favicon.ico') return reply(200, 'image', FAVICON, 'public, max-age=86400');
 
   let limits: Record<string, string> = {};

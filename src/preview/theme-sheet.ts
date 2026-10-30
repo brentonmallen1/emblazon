@@ -3,7 +3,7 @@ import { THEMES, emblazon, emblazonOptions, type ThemeName } from '../index.ts';
 import { page, section } from './layout.ts';
 import { LOOKS } from './looks.ts';
 
-/** A contact sheet for any theme, drawn on its jb-rpg screen colour. */
+/** A contact sheet for any theme, drawn on its screen colour. */
 export function themeSheet(theme: ThemeName): string {
   const look = LOOKS[theme];
   const t = THEMES[theme];
@@ -24,7 +24,7 @@ export function themeSheet(theme: ThemeName): string {
 
   return page(
     `emblazon · ${theme}`,
-    `${look.label} · v${t.latest}. Drawn on jb-rpg's ${look.label.split(' · ')[0]} screen colour.`,
+    `${look.label} · v${t.latest}. Drawn on the ${look.label.split(' · ')[0]} screen colour.`,
     `<style>
       .stage { background: ${look.bg}; border-radius: 14px; padding: 18px; display: flex; flex-wrap: wrap; gap: 14px; }
       .stage .card { background: #ffffff08; border-radius: 12px; padding: 14px 10px; color: #c9c5bb; }

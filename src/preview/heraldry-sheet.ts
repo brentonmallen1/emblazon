@@ -47,7 +47,7 @@ export function heraldrySheet(style: 'flat' | 'classic' = 'flat'): string {
       section('Charges', row(CHARGE_IDS.map((c) => tile(renderCharge(c, 'or'), CHARGES[c].name + (CHARGES[c].credit ? ' ·' : ''))))),
       section('Charges × tinctures and sizes', chargeMatrix()),
       section('At avatar sizes', sizeRows()),
-      section('On jb-rpg backgrounds', backdropRows()),
+      section('On dark backgrounds', backdropRows()),
       section('Generated', generatedGrid(200)),
     ].join(''),
   );

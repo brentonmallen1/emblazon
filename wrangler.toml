@@ -4,7 +4,7 @@
 #   just worker-dev    run it locally on Cloudflare's runtime
 #   just deploy        test, then deploy (CI does this on every push to main)
 #
-# Pages and the picker's modules are static assets, served free without running the Worker.
+# Pages are static assets, served free without running the Worker.
 # The Worker answers the API and emblem images.
 
 name = "emblazon"
